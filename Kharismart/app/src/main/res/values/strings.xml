@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KharisMart</string>
+    <string name="nav_pos">Kasir</string>
+    <string name="nav_history">Riwayat</string>
+    <string name="nav_inventory">Produk</string>
+    <string name="nav_debts">Buku Utang</string>
+    <string name="nav_finance">Catatan Kas</string>
+    <string name="nav_analytics">Laporan</string>
+    <string name="nav_users">Kelola Staf</string>
+    <string name="nav_settings">Pengaturan</string>
+    <string name="nav_backup">Cadangan</string>
+    <string name="nav_lock">Kunci Layar</string>
+    <string name="placeholder_under_construction">Fitur ini akan dibangun pada tahap berikutnya.</string>
+    <string name="access_denied_title">Akses Ditolak</string>
+    <string name="access_denied_message">Anda tidak memiliki izin untuk mengakses layar ini.</string>
+    <string name="role_admin">Administrator</string>
+    <string name="role_cashier">Kasir</string>
+    <string name="dev_lock_title">Pilih Profil Masuk (Dev Mode)</string>
+    <string name="dev_lock_subtitle">Simulasi login tanpa PIN untuk pengujian Day 0</string>
+</resources>
