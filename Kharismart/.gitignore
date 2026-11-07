@@ -1,4 +1,3 @@
-@"
 *.iml
 .gradle
 /local.properties
@@ -9,6 +8,4 @@
 .externalNativeBuild
 .cxx
 app/build/
-*.apk
 *.aab
-"@ | Out-File -FilePath ".gitignore" -Encoding utf8
