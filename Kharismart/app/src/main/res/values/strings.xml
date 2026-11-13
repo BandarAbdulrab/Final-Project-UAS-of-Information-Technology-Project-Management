@@ -16,6 +16,44 @@
     <string name="access_denied_message">Anda tidak memiliki izin untuk mengakses layar ini.</string>
     <string name="role_admin">Administrator</string>
     <string name="role_cashier">Kasir</string>
-    <string name="dev_lock_title">Pilih Profil Masuk (Dev Mode)</string>
-    <string name="dev_lock_subtitle">Simulasi login tanpa PIN untuk pengujian Day 0</string>
+    <string name="cd_menu">Menu</string>
+    <string name="action_cancel">Batal</string>
+
+    <!-- Lock Screen (Day 4 - SRS-F01) -->
+    <string name="lock_subtitle">Kasir &amp; Manajemen Toko Offline</string>
+    <string name="lock_select_staff_label">Pilih Akun Staf</string>
+    <string name="lock_no_active_users">Tidak ada akun staf aktif.</string>
+    <string name="lock_enter_pin_for">Masukkan PIN untuk %1$s</string>
+    <string name="lock_pin_hint">PIN 4 hingga 6 digit</string>
+    <string name="lock_pin_dots_cd">%1$d dari %2$d digit dimasukkan</string>
+    <string name="lock_backspace_cd">Hapus digit terakhir</string>
+    <string name="lock_ok">OK</string>
+    <string name="lock_clear_pin">Hapus PIN</string>
+    <string name="lock_forgot_admin_pin">Lupa PIN admin? Gunakan kode pemulihan</string>
+
+    <!-- Lock Errors & Lockout -->
+    <string name="lock_error_select_staff">Pilih akun staf terlebih dahulu.</string>
+    <string name="lock_error_pin_length">PIN harus terdiri dari 4 hingga 6 digit.</string>
+    <string name="lock_error_invalid_pin">PIN salah. Sisa percobaan: %1$d.</string>
+    <string name="lock_lockout_message">Terlalu banyak percobaan gagal. Input dikunci selama %1$d detik.</string>
+
+    <!-- Admin Recovery Flow -->
+    <string name="lock_recovery_title">Reset PIN Admin</string>
+    <string name="lock_recovery_description">Masukkan kode pemulihan admin sekali pakai dan buat PIN baru 4 hingga 6 digit.</string>
+    <string name="lock_recovery_code_label">Kode Pemulihan</string>
+    <string name="lock_recovery_code_placeholder">XXXX-XXXX-XXXX</string>
+    <string name="lock_recovery_new_pin_label">PIN Baru (4–6 digit)</string>
+    <string name="lock_recovery_confirm_pin_label">Konfirmasi PIN Baru</string>
+    <string name="lock_show_pin_cd">Tampilkan PIN</string>
+    <string name="lock_hide_pin_cd">Sembunyikan PIN</string>
+    <string name="lock_recovery_submit">Reset PIN</string>
+    <string name="lock_recovery_error_no_admin">Tidak ada akun admin aktif yang tersedia.</string>
+    <string name="lock_recovery_error_code_required">Kode pemulihan wajib diisi.</string>
+    <string name="lock_recovery_error_pin_mismatch">PIN baru dan konfirmasi PIN tidak cocok.</string>
+    <string name="lock_recovery_error_failed">Gagal mereset PIN admin.</string>
+
+    <!-- New One-Time Recovery Code Dialog -->
+    <string name="lock_new_recovery_title">Simpan Kode Pemulihan Baru Anda</string>
+    <string name="lock_new_recovery_warning">PIN Anda telah berhasil direset dan kode pemulihan lama tidak lagi berlaku. Catat kode pemulihan sekali pakai yang baru ini sekarang—kode ini tidak akan ditampilkan lagi:</string>
+    <string name="lock_new_recovery_acknowledge">Saya Sudah Mencatatnya</string>
 </resources>
