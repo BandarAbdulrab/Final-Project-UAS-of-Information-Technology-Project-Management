@@ -49,7 +49,9 @@ import com.byteall.kharismart.session.AppSession
 import com.byteall.kharismart.session.UserRole
 import com.byteall.kharismart.ui.common.PlaceholderScreen
 import com.byteall.kharismart.ui.debt.DebtListScreen
+import com.byteall.kharismart.ui.finance.ManualFinanceScreen
 import com.byteall.kharismart.ui.lock.LockScreen
+import com.byteall.kharismart.ui.settings.SettingsScreen
 import com.byteall.kharismart.ui.users.UserManagementScreen
 import kotlinx.coroutines.launch
 
@@ -249,7 +251,9 @@ fun RenderScreenContent(route: String) {
     } else {
         when (route) {
             Routes.DEBTS -> DebtListScreen()
+            Routes.FINANCE -> ManualFinanceScreen()
             Routes.USERS -> UserManagementScreen()
+            Routes.SETTINGS -> SettingsScreen()
             else -> {
                 val currentDest = APP_DESTINATIONS.find { it.route == route }
                 val title = if (currentDest != null) stringResource(currentDest.labelRes) else route
