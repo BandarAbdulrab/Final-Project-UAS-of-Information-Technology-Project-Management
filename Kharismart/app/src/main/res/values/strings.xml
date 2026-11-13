@@ -308,4 +308,82 @@
     <string name="settings_err_image_save">Gagal memproses gambar QRIS.</string>
     <string name="settings_err_pin_mismatch">Konfirmasi PIN baru tidak cocok.</string>
     <string name="settings_err_generic">Terjadi kesalahan saat menyimpan pengaturan.</string>
+
+    <!-- Financial Analytics, Target Rings & CSV Export (Day 13 - SRS-F15, BR-14, BR-15) -->
+    <string name="analytics_title">Laporan &amp; Analitik Keuangan</string>
+    <string name="analytics_subtitle">Pantau omzet, laba bersih, rekonsiliasi saldo kas fisik (BR-14), capaian target, dan ekspor CSV</string>
+    <string name="analytics_period_today">Hari Ini</string>
+    <string name="analytics_period_week">Minggu Ini</string>
+    <string name="analytics_period_month">Bulan Ini</string>
+    <string name="analytics_period_custom">Rentang Kustom</string>
+    <string name="analytics_active_range_label">Periode Aktif: %1$s s/d %2$s (%3$d Transaksi)</string>
+    <string name="analytics_btn_share_csv">Bagikan CSV</string>
+    <string name="analytics_btn_save_csv">Simpan CSV</string>
+    <string name="analytics_custom_dialog_title">Pilih Rentang Tanggal Laporan</string>
+    <string name="analytics_custom_start_label">Tanggal Mulai (YYYY-MM-DD)</string>
+    <string name="analytics_custom_end_label">Tanggal Akhir (YYYY-MM-DD)</string>
+    <string name="analytics_custom_apply">Terapkan Rentang</string>
+    <string name="analytics_err_invalid_date_format">Format tanggal harus YYYY-MM-DD yang valid.</string>
+    <string name="analytics_err_end_before_start">Tanggal akhir tidak boleh sebelum tanggal mulai.</string>
+
+    <!-- Target Progress Rings -->
+    <string name="analytics_section_targets">Capaian Target Omzet (Real-Time)</string>
+    <string name="analytics_target_daily_title">Target Harian</string>
+    <string name="analytics_target_weekly_title">Target Mingguan</string>
+    <string name="analytics_target_monthly_title">Target Bulanan</string>
+    <string name="analytics_target_percent">%1$d%%</string>
+    <string name="analytics_target_not_set">Target belum diatur</string>
+    <string name="analytics_target_of">dari %1$s</string>
+
+    <!-- KPI Summary Cards (BR-14) -->
+    <string name="analytics_section_kpi">Ringkasan Kinerja Keuangan (BR-14)</string>
+    <string name="analytics_kpi_revenue">Total Omzet (Pendapatan)</string>
+    <string name="analytics_kpi_revenue_sub">Tunai + QRIS + Kredit (%1$d nota)</string>
+    <string name="analytics_kpi_gross_profit">Laba Kotor (Gross Profit)</string>
+    <string name="analytics_kpi_gross_profit_sub">Omzet dikurangi HPP barang terjual</string>
+    <string name="analytics_kpi_expenses">Biaya Operasional</string>
+    <string name="analytics_kpi_expenses_sub">Pengeluaran kas manual toko</string>
+    <string name="analytics_kpi_net_profit">Laba Bersih (Net Profit)</string>
+    <string name="analytics_kpi_net_profit_sub">Laba Kotor + Pemasukan Lain - Biaya</string>
+    <string name="analytics_kpi_cash_balance">Saldo Kas &amp; QRIS Bersih</string>
+    <string name="analytics_kpi_cash_balance_sub">Arus kas masuk dikurangi belanja &amp; biaya</string>
+    <string name="analytics_kpi_outstanding_debt">Total Piutang Belum Lunas</string>
+    <string name="analytics_kpi_outstanding_debt_sub">Akumulasi seluruh utang pelanggan aktif</string>
+
+    <!-- Cash Balance Detail Breakdown Card -->
+    <string name="analytics_section_cash_detail">Rincian Rekonsiliasi Arus Kas &amp; Pembayaran</string>
+    <string name="analytics_detail_cash_sales">Penjualan Tunai (POS)</string>
+    <string name="analytics_detail_qris_sales">Penjualan QRIS (POS)</string>
+    <string name="analytics_detail_credit_sales">Penjualan Kredit / Utang Baru (POS)</string>
+    <string name="analytics_detail_cash_debt_paid">Pelunasan Utang via Tunai</string>
+    <string name="analytics_detail_qris_debt_paid">Pelunasan Utang via QRIS</string>
+    <string name="analytics_detail_total_cash_in">Total Kas Tunai Diterima</string>
+    <string name="analytics_detail_total_qris_in">Total Dana QRIS Diterima</string>
+    <string name="analytics_detail_other_income">Pemasukan Kas Manual Lainnya (+)</string>
+    <string name="analytics_detail_operating_expenses">Biaya Operasional Toko (-)</string>
+    <string name="analytics_detail_restock_purchases">Belanja Restok Barang Dagangan (-)</string>
+    <string name="analytics_detail_net_cash_balance">Saldo Kas Bersih Periode Ini</string>
+
+    <!-- Category Performance Breakdown -->
+    <string name="analytics_section_categories">Kinerja Penjualan per Kategori</string>
+    <string name="analytics_category_units">%1$d unit terjual</string>
+    <string name="analytics_category_profit">Laba Kotor: %1$s</string>
+    <string name="analytics_category_empty">Belum ada penjualan kategori pada periode ini.</string>
+
+    <!-- Best Sellers Table -->
+    <string name="analytics_section_best_sellers">Produk Terlaris &amp; Kontribusi Laba</string>
+    <string name="analytics_sort_units">Terjual</string>
+    <string name="analytics_sort_revenue">Omzet</string>
+    <string name="analytics_sort_profit">Laba Kotor</string>
+    <string name="analytics_col_rank">#</string>
+    <string name="analytics_col_product">Nama Produk</string>
+    <string name="analytics_col_units">Unit</string>
+    <string name="analytics_col_revenue">Omzet</string>
+    <string name="analytics_col_profit">Laba Kotor</string>
+    <string name="analytics_best_sellers_empty">Belum ada produk terjual pada periode ini.</string>
+
+    <!-- CSV Export Feedback -->
+    <string name="analytics_csv_chooser_title">Bagikan Laporan CSV</string>
+    <string name="analytics_msg_csv_saved">File laporan CSV berhasil disimpan.</string>
+    <string name="analytics_err_csv_export">Gagal mengekspor laporan CSV.</string>
 </resources>
