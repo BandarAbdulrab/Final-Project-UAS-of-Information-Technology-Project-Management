@@ -125,4 +125,83 @@
     <string name="users_msg_status_deactivated">Akun staf berhasil dinonaktifkan.</string>
     <string name="users_err_pin_mismatch">Konfirmasi PIN tidak cocok.</string>
     <string name="users_err_generic">Terjadi kesalahan saat memproses data staf.</string>
+
+    <!-- Debt Ledger & Repayments (Day 11 - SRS-F13) -->
+    <string name="debt_title">Buku Utang</string>
+    <string name="debt_subtitle">Pantau piutang pelanggan, cicilan pembayaran, dan nota kredit POS</string>
+    <string name="debt_add_manual_button">+ Catat Utang</string>
+    <string name="debt_outstanding_label">Total Piutang Belum Lunas</string>
+    <string name="debt_summary_unpaid">Belum Lunas: %1$d</string>
+    <string name="debt_summary_paid">Lunas: %1$d</string>
+    <string name="debt_search_placeholder">Cari nama pelanggan atau nomor struk...</string>
+    <string name="debt_search_clear_cd">Hapus pencarian</string>
+    <string name="debt_filter_all">Semua</string>
+    <string name="debt_filter_unpaid">Belum Lunas</string>
+    <string name="debt_filter_paid">Lunas</string>
+    <string name="debt_status_unpaid">Belum Lunas</string>
+    <string name="debt_status_paid">Lunas</string>
+    <string name="debt_origin_pos">Asal: Penjualan POS (%1$s)</string>
+    <string name="debt_origin_manual">Asal: Catatan Manual</string>
+    <string name="debt_label_total">Total Utang</string>
+    <string name="debt_label_paid">Sudah Dibayar</string>
+    <string name="debt_label_remaining">Sisa Utang</string>
+    <string name="debt_note_prefix">Catatan: %1$s</string>
+    <string name="debt_action_record_payment">Catat Pembayaran</string>
+    <string name="debt_action_view_receipt">Lihat Struk</string>
+    <string name="debt_action_history">Riwayat Cicilan</string>
+    <string name="debt_action_delete_cd">Hapus catatan utang</string>
+    <string name="debt_empty_state">Belum ada catatan utang.</string>
+    <string name="debt_empty_filtered">Tidak ada catatan utang yang sesuai filter.</string>
+
+    <!-- Debt Payment Dialog -->
+    <string name="debt_payment_dialog_title">Catat Pembayaran Utang</string>
+    <string name="debt_payment_customer">Pelanggan: %1$s</string>
+    <string name="debt_payment_remaining_info">Sisa Tagihan: %1$s</string>
+    <string name="debt_payment_quick_full">Bayar Lunas (%1$s)</string>
+    <string name="debt_payment_amount_label">Nominal Pembayaran (Rp)</string>
+    <string name="debt_payment_amount_placeholder">Contoh: 10000</string>
+    <string name="debt_payment_method_label">Metode Pembayaran</string>
+    <string name="debt_method_cash">Tunai</string>
+    <string name="debt_method_qris">QRIS</string>
+    <string name="debt_payment_note_label">Catatan Pembayaran (Opsional)</string>
+    <string name="debt_payment_note_placeholder">Contoh: Cicilan ke-1</string>
+    <string name="debt_payment_submit">Simpan Pembayaran</string>
+    <string name="debt_payment_err_invalid_amount">Masukkan nominal pembayaran yang valid.</string>
+    <string name="debt_payment_err_exceeds_remaining">Nominal melebihi sisa utang (%1$s).</string>
+
+    <!-- Add Manual Debt Dialog -->
+    <string name="debt_add_dialog_title">Catat Utang Manual</string>
+    <string name="debt_add_customer_label">Nama Pelanggan</string>
+    <string name="debt_add_customer_placeholder">Contoh: Bu Hirah</string>
+    <string name="debt_add_suggestions_label">Pelanggan Sebelumnya:</string>
+    <string name="debt_add_amount_label">Jumlah Utang (Rp)</string>
+    <string name="debt_add_amount_placeholder">Contoh: 25000</string>
+    <string name="debt_add_note_label">Catatan / Jatuh Tempo (Opsional)</string>
+    <string name="debt_add_note_placeholder">Contoh: Jatuh tempo akhir bulan</string>
+    <string name="debt_add_submit">Simpan Utang</string>
+    <string name="debt_add_err_customer_required">Nama pelanggan wajib diisi.</string>
+    <string name="debt_add_err_invalid_amount">Jumlah utang harus lebih dari Rp0.</string>
+
+    <!-- Delete & History & Receipt Preview Dialogs -->
+    <string name="debt_delete_dialog_title">Hapus Catatan Utang?</string>
+    <string name="debt_delete_dialog_message">Catatan utang manual atas nama %1$s sebesar %2$s akan dihapus permanen.</string>
+    <string name="debt_delete_confirm">Ya, Hapus</string>
+    <string name="debt_history_dialog_title">Riwayat Pembayaran Cicilan</string>
+    <string name="debt_history_empty">Belum ada pembayaran tercatat.</string>
+    <string name="debt_receipt_dialog_title">Struk Penjualan Asal</string>
+    <string name="debt_receipt_no_label">No. Struk: %1$s</string>
+    <string name="debt_receipt_date_label">Waktu: %1$s WIB</string>
+    <string name="debt_receipt_cashier_label">Kasir: %1$s</string>
+    <string name="debt_receipt_method_credit">Metode: Kredit / Utang</string>
+    <string name="debt_receipt_total_label">Total Belanja</string>
+    <string name="debt_receipt_paid_label">Dibayar Saat Transaksi</string>
+    <string name="debt_receipt_remaining_label">Sisa Utang Saat Ini</string>
+
+    <!-- Debt Feedback Messages -->
+    <string name="debt_msg_payment_success">Pembayaran utang berhasil dicatat.</string>
+    <string name="debt_msg_added_success">Catatan utang manual berhasil disimpan.</string>
+    <string name="debt_msg_deleted_success">Catatan utang manual berhasil dihapus.</string>
+    <string name="debt_err_no_session">Sesi pengguna tidak ditemukan. Silakan masuk ulang.</string>
+    <string name="debt_err_receipt_not_found">Data struk transaksi tidak ditemukan.</string>
+    <string name="debt_err_generic">Terjadi kesalahan saat memproses data utang.</string>
 </resources>

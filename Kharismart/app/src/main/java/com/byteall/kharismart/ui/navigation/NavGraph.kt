@@ -3,7 +3,6 @@ package com.byteall.kharismart.ui.navigation
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -34,6 +33,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -48,6 +48,7 @@ import com.byteall.kharismart.R
 import com.byteall.kharismart.session.AppSession
 import com.byteall.kharismart.session.UserRole
 import com.byteall.kharismart.ui.common.PlaceholderScreen
+import com.byteall.kharismart.ui.debt.DebtListScreen
 import com.byteall.kharismart.ui.lock.LockScreen
 import com.byteall.kharismart.ui.users.UserManagementScreen
 import kotlinx.coroutines.launch
@@ -90,35 +91,44 @@ fun MainAppShell() {
                     .safeDrawingPadding()
             ) {
                 NavigationRail(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .verticalScroll(rememberScrollState())
+                    modifier = Modifier.fillMaxHeight()
                 ) {
-                    visibleDestinations.forEach { dest ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        visibleDestinations.forEach { dest ->
+                            NavigationRailItem(
+                                selected = currentRoute == dest.route,
+                                onClick = { navigateTopLevel(navController, dest.route) },
+                                icon = {
+                                    Icon(
+                                        imageVector = dest.icon,
+                                        contentDescription = stringResource(dest.labelRes)
+                                    )
+                                },
+                                label = { Text(stringResource(dest.labelRes)) }
+                            )
+                        }
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                                .width(48.dp)
+                        )
                         NavigationRailItem(
-                            selected = currentRoute == dest.route,
-                            onClick = { navigateTopLevel(navController, dest.route) },
+                            selected = false,
+                            onClick = { AppSession.signOut() },
                             icon = {
                                 Icon(
-                                    imageVector = dest.icon,
-                                    contentDescription = stringResource(dest.labelRes)
+                                    imageVector = Icons.Default.Lock,
+                                    contentDescription = stringResource(R.string.nav_lock)
                                 )
                             },
-                            label = { Text(stringResource(dest.labelRes)) }
+                            label = { Text(stringResource(R.string.nav_lock)) }
                         )
                     }
-                    Spacer(modifier = Modifier.weight(1f))
-                    NavigationRailItem(
-                        selected = false,
-                        onClick = { AppSession.signOut() },
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = stringResource(R.string.nav_lock)
-                            )
-                        },
-                        label = { Text(stringResource(R.string.nav_lock)) }
-                    )
                 }
 
                 KharismartNavHost(
@@ -238,6 +248,7 @@ fun RenderScreenContent(route: String) {
         )
     } else {
         when (route) {
+            Routes.DEBTS -> DebtListScreen()
             Routes.USERS -> UserManagementScreen()
             else -> {
                 val currentDest = APP_DESTINATIONS.find { it.route == route }
