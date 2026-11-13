@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Core App & Navigation (Day 0) -->
     <string name="app_name">KharisMart</string>
     <string name="nav_pos">Kasir</string>
     <string name="nav_history">Riwayat</string>
@@ -11,49 +11,118 @@
     <string name="nav_settings">Pengaturan</string>
     <string name="nav_backup">Cadangan</string>
     <string name="nav_lock">Kunci Layar</string>
+    <string name="nav_open_drawer_cd">Buka menu navigasi</string>
+
+    <!-- Placeholders & Access Guard (Day 0) -->
     <string name="placeholder_under_construction">Fitur ini akan dibangun pada tahap berikutnya.</string>
     <string name="access_denied_title">Akses Ditolak</string>
-    <string name="access_denied_message">Anda tidak memiliki izin untuk mengakses layar ini.</string>
-    <string name="role_admin">Administrator</string>
+    <string name="access_denied_message">Anda tidak memiliki izin untuk mengakses fitur ini.</string>
+    <string name="role_admin">Admin</string>
     <string name="role_cashier">Kasir</string>
-    <string name="cd_menu">Menu</string>
     <string name="action_cancel">Batal</string>
+    <string name="action_save">Simpan</string>
+    <string name="action_confirm">Konfirmasi</string>
+    <string name="action_close">Tutup</string>
+    <string name="dev_lock_title">Pilih Profil Masuk (Dev Mode)</string>
+    <string name="dev_lock_subtitle">Simulasi login tanpa PIN untuk pengujian awal</string>
 
-    <!-- Lock Screen (Day 4 - SRS-F01) -->
-    <string name="lock_subtitle">Kasir &amp; Manajemen Toko Offline</string>
+    <!-- Lock Screen & PIN Recovery (Day 4 - SRS-F01) -->
+    <string name="lock_subtitle">Sistem Kasir &amp; Manajemen Toko</string>
     <string name="lock_select_staff_label">Pilih Akun Staf</string>
+    <string name="lock_select_staff">Pilih Staf Bertugas</string>
     <string name="lock_no_active_users">Tidak ada akun staf aktif.</string>
+    <string name="lock_enter_pin">Masukkan PIN</string>
     <string name="lock_enter_pin_for">Masukkan PIN untuk %1$s</string>
-    <string name="lock_pin_hint">PIN 4 hingga 6 digit</string>
-    <string name="lock_pin_dots_cd">%1$d dari %2$d digit dimasukkan</string>
-    <string name="lock_backspace_cd">Hapus digit terakhir</string>
+    <string name="lock_pin_hint">Pilih akun staf lalu masukkan 4–6 digit PIN</string>
+    <string name="lock_pin_digits_hint">4 - 6 Digit Angka</string>
+    <string name="lock_pin_dots_cd">Indikator digit PIN</string>
+    <string name="lock_backspace_cd">Hapus satu digit</string>
     <string name="lock_ok">OK</string>
-    <string name="lock_clear_pin">Hapus PIN</string>
-    <string name="lock_forgot_admin_pin">Lupa PIN admin? Gunakan kode pemulihan</string>
-
-    <!-- Lock Errors & Lockout -->
-    <string name="lock_error_select_staff">Pilih akun staf terlebih dahulu.</string>
-    <string name="lock_error_pin_length">PIN harus terdiri dari 4 hingga 6 digit.</string>
-    <string name="lock_error_invalid_pin">PIN salah. Sisa percobaan: %1$d.</string>
-    <string name="lock_lockout_message">Terlalu banyak percobaan gagal. Input dikunci selama %1$d detik.</string>
-
-    <!-- Admin Recovery Flow -->
-    <string name="lock_recovery_title">Reset PIN Admin</string>
-    <string name="lock_recovery_description">Masukkan kode pemulihan admin sekali pakai dan buat PIN baru 4 hingga 6 digit.</string>
+    <string name="lock_clear_pin">Bersihkan</string>
+    <string name="lock_forgot_admin_pin">Lupa PIN Admin? Gunakan kode pemulihan</string>
+    <string name="lock_btn_forgot_admin">Lupa PIN Admin? Gunakan Kode Pemulihan</string>
+    <string name="lock_error_select_staff">Silakan pilih akun staf terlebih dahulu.</string>
+    <string name="lock_err_select_user">Silakan pilih staf terlebih dahulu</string>
+    <string name="lock_error_pin_length">PIN harus terdiri dari 4 hingga 6 angka.</string>
+    <string name="lock_err_pin_length">PIN harus terdiri dari 4 sampai 6 digit</string>
+    <string name="lock_error_invalid_pin">PIN salah. Sisa percobaan: %1$d</string>
+    <string name="lock_pin_wrong">PIN salah. Sisa percobaan: %1$d</string>
+    <string name="lock_lockout_message">Terlalu banyak percobaan gagal. Coba lagi dalam %1$d detik.</string>
+    <string name="lock_locked_out">Terlalu banyak percobaan salah. Coba lagi dalam %1$d detik</string>
+    <string name="lock_recovery_title">Pemulihan PIN Admin</string>
+    <string name="lock_dialog_recovery_title">Pemulihan PIN Admin</string>
+    <string name="lock_recovery_description">Masukkan kode pemulihan sekali pakai untuk mengatur ulang PIN akun Admin.</string>
     <string name="lock_recovery_code_label">Kode Pemulihan</string>
     <string name="lock_recovery_code_placeholder">XXXX-XXXX-XXXX</string>
-    <string name="lock_recovery_new_pin_label">PIN Baru (4–6 digit)</string>
+    <string name="lock_recovery_new_pin_label">PIN Baru (4–6 angka)</string>
+    <string name="lock_new_pin_label">PIN Baru (4-6 digit angka)</string>
     <string name="lock_recovery_confirm_pin_label">Konfirmasi PIN Baru</string>
+    <string name="lock_confirm_new_pin_label">Konfirmasi PIN Baru</string>
     <string name="lock_show_pin_cd">Tampilkan PIN</string>
     <string name="lock_hide_pin_cd">Sembunyikan PIN</string>
-    <string name="lock_recovery_submit">Reset PIN</string>
-    <string name="lock_recovery_error_no_admin">Tidak ada akun admin aktif yang tersedia.</string>
+    <string name="lock_recovery_submit">Atur Ulang PIN</string>
+    <string name="lock_btn_reset_pin">Reset PIN</string>
+    <string name="lock_btn_cancel">Batal</string>
+    <string name="lock_recovery_error_no_admin">Akun admin aktif tidak ditemukan.</string>
     <string name="lock_recovery_error_code_required">Kode pemulihan wajib diisi.</string>
-    <string name="lock_recovery_error_pin_mismatch">PIN baru dan konfirmasi PIN tidak cocok.</string>
-    <string name="lock_recovery_error_failed">Gagal mereset PIN admin.</string>
-
-    <!-- New One-Time Recovery Code Dialog -->
-    <string name="lock_new_recovery_title">Simpan Kode Pemulihan Baru Anda</string>
-    <string name="lock_new_recovery_warning">PIN Anda telah berhasil direset dan kode pemulihan lama tidak lagi berlaku. Catat kode pemulihan sekali pakai yang baru ini sekarang—kode ini tidak akan ditampilkan lagi:</string>
+    <string name="lock_recovery_error_pin_mismatch">Konfirmasi PIN baru tidak cocok.</string>
+    <string name="lock_recovery_error_failed">Kode pemulihan tidak valid atau gagal memproses.</string>
+    <string name="lock_new_recovery_title">Kode Pemulihan Baru</string>
+    <string name="lock_new_code_title">Kode Pemulihan Baru Anda</string>
+    <string name="lock_new_recovery_warning">PENTING: Catat kode pemulihan baru ini di tempat yang aman. Kode lama sudah tidak berlaku dan kode ini hanya ditampilkan satu kali.</string>
+    <string name="lock_new_code_warning">Catat dan simpan kode ini di tempat aman. Kode pemulihan lama Anda sudah tidak berlaku.</string>
     <string name="lock_new_recovery_acknowledge">Saya Sudah Mencatatnya</string>
+    <string name="lock_btn_copied">Saya Sudah Mencatatnya</string>
+    <string name="lock_btn_backspace">Hapus</string>
+    <string name="lock_btn_enter">Masuk</string>
+
+    <!-- Staff Administration / User Management (Day 5 - SRS-F02) -->
+    <string name="users_title">Kelola Staf</string>
+    <string name="users_subtitle">Tambah akun kasir, atur ulang PIN, dan kelola status aktif staf toko</string>
+    <string name="users_add_button">+ Tambah Staf</string>
+    <string name="users_summary_total">Total Akun: %1$d</string>
+    <string name="users_summary_active">Staf Aktif: %1$d</string>
+    <string name="users_summary_admins">Admin Aktif: %1$d</string>
+    <string name="users_col_name">Nama &amp; Username</string>
+    <string name="users_col_role">Peran</string>
+    <string name="users_col_status">Status</string>
+    <string name="users_col_actions">Aksi</string>
+    <string name="users_status_active">Aktif</string>
+    <string name="users_status_inactive">Nonaktif</string>
+    <string name="users_reset_pin_button">Reset PIN</string>
+    <string name="users_empty_state">Belum ada akun staf terdaftar.</string>
+    <string name="users_username_prefix">@%1$s</string>
+
+    <!-- Add Staff Dialog -->
+    <string name="users_add_dialog_title">Tambah Staf Baru</string>
+    <string name="users_field_name_label">Nama Lengkap</string>
+    <string name="users_field_name_placeholder">Contoh: Budi Santoso</string>
+    <string name="users_field_username_label">Username (Unik)</string>
+    <string name="users_field_username_placeholder">Contoh: budi</string>
+    <string name="users_field_pin_label">PIN Awal (4–6 angka)</string>
+    <string name="users_field_confirm_pin_label">Konfirmasi PIN</string>
+    <string name="users_field_role_label">Peran Akun</string>
+    <string name="users_add_submit">Simpan Staf</string>
+
+    <!-- Reset PIN Dialog -->
+    <string name="users_reset_dialog_title">Reset PIN Staf</string>
+    <string name="users_reset_dialog_target">Atur ulang PIN untuk %1$s (@%2$s)</string>
+    <string name="users_field_new_pin_label">PIN Baru (4–6 angka)</string>
+    <string name="users_reset_submit">Simpan PIN Baru</string>
+
+    <!-- Status Confirmation Dialogs -->
+    <string name="users_confirm_deactivate_title">Nonaktifkan Akun Staf?</string>
+    <string name="users_confirm_deactivate_message">Akun %1$s (@%2$s) tidak akan muncul di layar kunci dan tidak dapat masuk sampai diaktifkan kembali. Riwayat transaksi staf ini tetap tersimpan.</string>
+    <string name="users_confirm_deactivate_yes">Ya, Nonaktifkan</string>
+    <string name="users_confirm_activate_title">Aktifkan Kembali Akun Staf?</string>
+    <string name="users_confirm_activate_message">Akun %1$s (@%2$s) akan ditampilkan kembali di layar kunci dan dapat digunakan masuk.</string>
+    <string name="users_confirm_activate_yes">Ya, Aktifkan</string>
+
+    <!-- Feedback Messages -->
+    <string name="users_msg_added_success">Staf baru berhasil ditambahkan.</string>
+    <string name="users_msg_pin_reset_success">PIN staf berhasil diperbarui.</string>
+    <string name="users_msg_status_activated">Akun staf berhasil diaktifkan.</string>
+    <string name="users_msg_status_deactivated">Akun staf berhasil dinonaktifkan.</string>
+    <string name="users_err_pin_mismatch">Konfirmasi PIN tidak cocok.</string>
+    <string name="users_err_generic">Terjadi kesalahan saat memproses data staf.</string>
 </resources>
