@@ -18,4 +18,15 @@
     <string name="role_cashier">Kasir</string>
     <string name="dev_lock_title">Pilih Profil Masuk (Dev Mode)</string>
     <string name="dev_lock_subtitle">Simulasi login tanpa PIN untuk pengujian Day 0</string>
+
+    <!-- Day 6: Photo Storage & Image Picker -->
+    <string name="product_photo_title">Foto Produk</string>
+    <string name="product_photo_description">Foto produk</string>
+    <string name="product_photo_placeholder">Ikon placeholder foto produk</string>
+    <string name="product_photo_no_image">Belum ada foto</string>
+    <string name="product_photo_select">Pilih Foto</string>
+    <string name="product_photo_change">Ganti Foto</string>
+    <string name="product_photo_delete">Hapus Foto</string>
+    <string name="product_photo_hint">Format JPG/PNG, maks. 1 MB</string>
+    <string name="product_photo_loading">Memproses foto…</string>
 </resources>
