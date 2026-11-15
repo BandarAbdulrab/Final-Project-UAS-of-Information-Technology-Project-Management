@@ -18,18 +18,9 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * UI presentation model for a line item in the POS active cart.
- *
- * Requirements:
- * - Prices and subtotals are strictly Long in Indonesian Rupiah.
- * - Quantities and stocks are Int.
- * - Enforces available stock limit (BR-01).
- */
 data class CartItemUiModel(
     val product: ProductEntity,
     val quantity: Int,
@@ -38,9 +29,6 @@ data class CartItemUiModel(
     val maxAvailableStock: Int = product.stock
 )
 
-/**
- * Complete UI state for the Point of Sale screen.
- */
 data class PosUiState(
     val catalogProducts: List<ProductEntity> = emptyList(),
     val categories: List<CategoryEntity> = emptyList(),
@@ -55,22 +43,15 @@ data class PosUiState(
     val isSubmitting: Boolean = false
 )
 
-/**
- * ViewModel for the POS and Cart Screen (SRS-F05, F06, F07, F08, BR-01, BR-02, BR-03, BR-04, BR-05).
- *
- * Responsibilities:
- * - Manages active cart items and real-time total calculations in IDR.
- * - Intercepts hardware barcode scanner lookups via [InventoryRepository.findByBarcode].
- * - Validates stock constraints so that cart quantities never exceed available inventory.
- * - Provides catalog filtering by category and search query.
- * - Executes atomic checkout via [SaleRepository.completeCheckout].
- */
 class PosViewModel(
     private val inventoryRepository: InventoryRepository,
     private val saleRepository: SaleRepository? = null,
     private val debtRepository: DebtRepository? = null,
     private val settingsRepository: SettingsRepository? = null
 ) : ViewModel() {
+
+    private var rawProducts: List<ProductEntity> = emptyList()
+    private var rawCategories: List<CategoryEntity> = emptyList()
 
     private val _cartItems = MutableStateFlow<List<CartItemUiModel>>(emptyList())
     val cartItems: StateFlow<List<CartItemUiModel>> = _cartItems.asStateFlow()
@@ -84,16 +65,15 @@ class PosViewModel(
     private val _userMessage = MutableStateFlow<String?>(null)
     private val _errorMessage = MutableStateFlow<String?>(null)
     private val _isSubmitting = MutableStateFlow(false)
+
     private val _completedReceipt = MutableStateFlow<ReceiptUiModel?>(null)
     val completedReceipt: StateFlow<ReceiptUiModel?> = _completedReceipt.asStateFlow()
 
-    val totalAmount: StateFlow<Long> = _cartItems
-        .map { items -> items.sumOf { it.subtotal } }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = 0L
-        )
+    private val _totalAmount = MutableStateFlow(0L)
+    val totalAmount: StateFlow<Long> = _totalAmount.asStateFlow()
+
+    private val _uiState = MutableStateFlow(PosUiState())
+    val uiState: StateFlow<PosUiState> = _uiState.asStateFlow()
 
     val debtorSuggestions: StateFlow<List<String>> = debtRepository?.observeCustomerNames()
         ?.stateIn(
@@ -109,20 +89,29 @@ class PosViewModel(
             initialValue = null
         ) ?: MutableStateFlow(null)
 
-    private data class CatalogData(
-        val products: List<ProductEntity>,
-        val categories: List<CategoryEntity>,
-        val selectedCatId: Long?,
-        val query: String
-    )
+    init {
+        viewModelScope.launch {
+            combine(
+                inventoryRepository.observeActiveProducts(),
+                inventoryRepository.observeCategories()
+            ) { products, categories ->
+                products to categories
+            }.collect { (products, categories) ->
+                rawProducts = products
+                rawCategories = categories
+                syncState()
+            }
+        }
+    }
 
-    private val catalogFlow = combine(
-        inventoryRepository.observeActiveProducts(),
-        inventoryRepository.observeCategories(),
-        _selectedCategoryId,
-        _searchQuery
-    ) { products, categories, selectedCatId, query ->
-        val filtered = products.filter { product ->
+    private fun syncState() {
+        val selectedCatId = _selectedCategoryId.value
+        val query = _searchQuery.value
+        val cart = _cartItems.value
+        val total = cart.sumOf { it.subtotal }
+        val count = cart.sumOf { it.quantity }
+
+        val filteredProducts = rawProducts.filter { product ->
             if (selectedCatId != null && product.categoryId != selectedCatId) {
                 return@filter false
             }
@@ -133,63 +122,42 @@ class PosViewModel(
             }
             true
         }
-        CatalogData(filtered, categories, selectedCatId, query)
-    }
 
-    private val feedbackFlow = combine(
-        _userMessage,
-        _errorMessage,
-        _isSubmitting
-    ) { userMsg, errorMsg, submitting ->
-        Triple(userMsg, errorMsg, submitting)
-    }
-
-    val uiState: StateFlow<PosUiState> = combine(
-        catalogFlow,
-        _cartItems,
-        feedbackFlow
-    ) { catalog, cart, (userMsg, errorMsg, submitting) ->
-        val total = cart.sumOf { it.subtotal }
-        val count = cart.sumOf { it.quantity }
-
-        PosUiState(
-            catalogProducts = catalog.products,
-            categories = catalog.categories,
-            selectedCategoryId = catalog.selectedCatId,
-            searchQuery = catalog.query,
+        _totalAmount.value = total
+        _uiState.value = PosUiState(
+            catalogProducts = filteredProducts,
+            categories = rawCategories,
+            selectedCategoryId = selectedCatId,
+            searchQuery = query,
             cartItems = cart,
             totalAmount = total,
             totalItemCount = count,
-            userMessage = userMsg,
-            errorMessage = errorMsg,
-            isSubmitting = submitting
+            userMessage = _userMessage.value,
+            errorMessage = _errorMessage.value,
+            isSubmitting = _isSubmitting.value
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = PosUiState()
-    )
+    }
 
     fun onCategorySelected(categoryId: Long?) {
         _selectedCategoryId.value = categoryId
+        syncState()
     }
 
     fun onSearchQueryChanged(query: String) {
         _searchQuery.value = query
+        syncState()
     }
 
     fun clearUserMessage() {
         _userMessage.value = null
+        syncState()
     }
 
     fun clearErrorMessage() {
         _errorMessage.value = null
+        syncState()
     }
 
-    /**
-     * Handles hardware scanner input ending in Enter.
-     * Looks up the barcode in the inventory repository and appends/increments the product.
-     */
     fun onBarcodeScanned(barcode: String) {
         val cleanBarcode = barcode.trim()
         if (cleanBarcode.isBlank()) return
@@ -198,19 +166,17 @@ class PosViewModel(
             val product = inventoryRepository.findByBarcode(cleanBarcode)
             if (product == null) {
                 _errorMessage.value = "Produk dengan barcode '$cleanBarcode' tidak ditemukan"
+                syncState()
                 return@launch
             }
             addToCart(product)
         }
     }
 
-    /**
-     * Adds a product to the cart or increments its quantity by 1 if already in the cart,
-     * ensuring it does not exceed available stock.
-     */
     fun addToCart(product: ProductEntity) {
         if (product.stock <= 0) {
             _errorMessage.value = "Stok '${product.name}' habis dan tidak dapat ditambahkan"
+            syncState()
             return
         }
 
@@ -221,6 +187,7 @@ class PosViewModel(
             val existing = currentList[index]
             if (existing.quantity + 1 > product.stock) {
                 _errorMessage.value = "Stok '${product.name}' tidak mencukupi (tersedia: ${product.stock})"
+                syncState()
                 return
             }
             val newQty = existing.quantity + 1
@@ -240,12 +207,9 @@ class PosViewModel(
             )
         }
         _cartItems.value = currentList
+        syncState()
     }
 
-    /**
-     * Adjusts the quantity of a cart line item by [delta] (+1 or -1).
-     * If quantity reaches 0, the item is removed.
-     */
     fun updateQuantity(productId: Long, delta: Int) {
         val currentList = _cartItems.value.toMutableList()
         val index = currentList.indexOfFirst { it.product.productId == productId }
@@ -258,6 +222,7 @@ class PosViewModel(
             currentList.removeAt(index)
         } else if (newQty > existing.maxAvailableStock) {
             _errorMessage.value = "Stok '${existing.product.name}' tidak mencukupi (tersedia: ${existing.maxAvailableStock})"
+            syncState()
             return
         } else {
             currentList[index] = existing.copy(
@@ -266,25 +231,19 @@ class PosViewModel(
             )
         }
         _cartItems.value = currentList
+        syncState()
     }
 
-    /**
-     * Removes an item completely from the active cart.
-     */
     fun removeItem(productId: Long) {
         _cartItems.value = _cartItems.value.filterNot { it.product.productId == productId }
+        syncState()
     }
 
-    /**
-     * Empties the entire active cart.
-     */
     fun clearCart() {
         _cartItems.value = emptyList()
+        syncState()
     }
 
-    /**
-     * Executes atomic checkout for the current cart lines (SRS-F07, F08).
-     */
     fun completeCheckout(
         method: String,
         paidAmount: Long,
@@ -296,12 +255,14 @@ class PosViewModel(
         val cart = _cartItems.value
         if (cart.isEmpty()) {
             _errorMessage.value = "Keranjang belanja kosong"
+            syncState()
             return
         }
 
         val repo = saleRepository
         if (repo == null) {
             _errorMessage.value = "SaleRepository belum tersedia"
+            syncState()
             return
         }
 
@@ -309,6 +270,7 @@ class PosViewModel(
         val lines = cart.map { CartLine(productId = it.product.productId, quantity = it.quantity) }
 
         _isSubmitting.value = true
+        syncState()
         viewModelScope.launch {
             val result = repo.completeCheckout(
                 lines = lines,
@@ -321,8 +283,9 @@ class PosViewModel(
 
             _isSubmitting.value = false
             result.onSuccess { transaction ->
-                clearCart()
+                _cartItems.value = emptyList()
                 _userMessage.value = "Transaksi berhasil disimpan! No: ${transaction.receiptNo}"
+                syncState()
                 viewModelScope.launch {
                     val receiptData = repo.getReceiptData(transaction.transactionId)
                     if (receiptData != null) {
@@ -332,6 +295,7 @@ class PosViewModel(
                 onSuccess?.invoke(transaction)
             }.onFailure { error ->
                 _errorMessage.value = error.message ?: "Gagal memproses transaksi"
+                syncState()
             }
         }
     }

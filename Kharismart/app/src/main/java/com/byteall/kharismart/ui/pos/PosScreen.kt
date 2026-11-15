@@ -2,7 +2,6 @@ package com.byteall.kharismart.ui.pos
 
 import android.content.res.Configuration
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -30,6 +29,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Image
@@ -47,7 +47,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -70,11 +69,13 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
@@ -88,17 +89,6 @@ import com.byteall.kharismart.util.format.toRupiah
 import com.byteall.kharismart.util.image.ImageStorageManager
 import kotlinx.coroutines.launch
 
-/**
- * Point of Sale (POS) screen in Jetpack Compose (SRS-F05, F06, BR-01, BR-02).
- *
- * Features:
- * - Responsive split-screen: Tablet landscape (catalog left 60%, cart right 40%); Mobile/tablet portrait.
- * - Hardware Barcode Scanner listener with [FocusRequester] auto-focused for continuous scanning.
- * - Catalog: Quick search bar, category chips, and touchable product grid cards.
- * - Cart: Line items with photo, name, unit price, quantity stepper `[-] qty [+]`, delete button, subtotal.
- * - Enforces available stock constraints (BR-01): cannot add items past available inventory.
- * - Bottom Cart Bar: Prominent Total Display in Indonesian Rupiah and "Bayar / Checkout" primary button.
- */
 @Composable
 fun PosScreen(
     viewModel: PosViewModel = appViewModel { container ->
@@ -118,6 +108,7 @@ fun PosScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -139,12 +130,6 @@ fun PosScreen(
         }
     }
 
-    // Request auto-focus on barcode listener when screen opens
-    LaunchedEffect(Unit) {
-        barcodeFocusRequester.requestFocus()
-    }
-
-    // Feedback notifications
     LaunchedEffect(uiState.userMessage) {
         uiState.userMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -162,22 +147,19 @@ fun PosScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.interceptBarcodeKeyEvents { scannedCode ->
             viewModel.onBarcodeScanned(scannedCode)
-            barcodeFocusRequester.requestFocus()
         }
     ) { paddingValues ->
         if (isLandscape) {
-            // Tablet Landscape: Split Layout (Catalog on Left, Cart on Right)
             Row(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Left Side: Product Catalog & Search
                 Column(
                     modifier = Modifier
-                        .weight(0.60f)
+                        .weight(0.56f)
                         .fillMaxHeight()
                 ) {
                     CatalogSection(
@@ -188,23 +170,21 @@ fun PosScreen(
                         onBarcodeSubmit = {
                             viewModel.onBarcodeScanned(it)
                             barcodeInputText = ""
-                            barcodeFocusRequester.requestFocus()
+                            focusManager.clearFocus()
                         },
                         onSearchChanged = { viewModel.onSearchQueryChanged(it) },
                         onCategorySelected = { viewModel.onCategorySelected(it) },
                         onProductClick = { product ->
                             viewModel.addToCart(product)
-                            barcodeFocusRequester.requestFocus()
                         }
                     )
                 }
 
-                // Right Side: Active Cart & Total
                 Card(
                     modifier = Modifier
-                        .weight(0.40f)
+                        .weight(0.44f)
                         .fillMaxHeight(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     ),
@@ -214,11 +194,9 @@ fun PosScreen(
                         uiState = uiState,
                         onUpdateQuantity = { id, delta ->
                             viewModel.updateQuantity(id, delta)
-                            barcodeFocusRequester.requestFocus()
                         },
                         onRemoveItem = { id ->
                             viewModel.removeItem(id)
-                            barcodeFocusRequester.requestFocus()
                         },
                         onClearCartClick = { showClearCartConfirmation = true },
                         onCheckoutClick = handleCheckoutClick
@@ -226,14 +204,13 @@ fun PosScreen(
                 }
             }
         } else {
-            // Portrait / Handheld Layout: Vertical Stack
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(12.dp)
+                    .padding(10.dp)
             ) {
-                Box(modifier = Modifier.weight(0.55f)) {
+                Box(modifier = Modifier.weight(0.52f)) {
                     CatalogSection(
                         uiState = uiState,
                         barcodeInputText = barcodeInputText,
@@ -242,22 +219,21 @@ fun PosScreen(
                         onBarcodeSubmit = {
                             viewModel.onBarcodeScanned(it)
                             barcodeInputText = ""
-                            barcodeFocusRequester.requestFocus()
+                            focusManager.clearFocus()
                         },
                         onSearchChanged = { viewModel.onSearchQueryChanged(it) },
                         onCategorySelected = { viewModel.onCategorySelected(it) },
                         onProductClick = { product ->
                             viewModel.addToCart(product)
-                            barcodeFocusRequester.requestFocus()
                         }
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 Card(
                     modifier = Modifier
-                        .weight(0.45f)
+                        .weight(0.48f)
                         .fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
@@ -277,7 +253,6 @@ fun PosScreen(
         }
     }
 
-    // Day 9: Atomic 3-Way Checkout Dialog (SRS-F07, F08)
     if (showCheckoutDialog) {
         CheckoutDialog(
             totalAmount = uiState.totalAmount,
@@ -288,7 +263,6 @@ fun PosScreen(
             isSubmitting = uiState.isSubmitting,
             onDismissRequest = {
                 showCheckoutDialog = false
-                barcodeFocusRequester.requestFocus()
             },
             onConfirmCheckout = { method, paidAmount, customerName, note ->
                 viewModel.completeCheckout(
@@ -298,25 +272,21 @@ fun PosScreen(
                     note = note,
                     onSuccess = {
                         showCheckoutDialog = false
-                        barcodeFocusRequester.requestFocus()
                     }
                 )
             }
         )
     }
 
-    // Day 10: Thermal Receipt Dialog on Checkout Completion (SRS-F09)
     completedReceipt?.let { receipt ->
         ReceiptDialog(
             receipt = receipt,
             onDismiss = {
                 viewModel.dismissCompletedReceipt()
-                barcodeFocusRequester.requestFocus()
             }
         )
     }
 
-    // Confirmation dialog before clearing cart
     if (showClearCartConfirmation) {
         AlertDialog(
             onDismissRequest = { showClearCartConfirmation = false },
@@ -327,7 +297,6 @@ fun PosScreen(
                     onClick = {
                         viewModel.clearCart()
                         showClearCartConfirmation = false
-                        barcodeFocusRequester.requestFocus()
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
@@ -343,9 +312,6 @@ fun PosScreen(
     }
 }
 
-/**
- * Left/Top Section: Barcode scanning input, quick search, category filter chips, and product grid.
- */
 @Composable
 private fun CatalogSection(
     uiState: PosUiState,
@@ -358,60 +324,78 @@ private fun CatalogSection(
     onProductClick: (ProductEntity) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
-        // Barcode Input Box (Auto-Focused for HID USB/Bluetooth scanners)
-        OutlinedTextField(
-            value = barcodeInputText,
-            onValueChange = { input ->
-                if (input.endsWith("\n") || input.endsWith("\r")) {
-                    val scanned = input.trim()
-                    if (scanned.isNotEmpty()) {
-                        onBarcodeSubmit(scanned)
-                    }
-                } else {
-                    onBarcodeInputChanged(input)
-                }
-            },
-            label = { Text(stringResource(R.string.pos_barcode_input_label)) },
-            placeholder = { Text(stringResource(R.string.pos_barcode_input_hint)) },
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Default.QrCode,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Ascii,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    val code = barcodeInputText.trim()
-                    if (code.isNotEmpty()) {
-                        onBarcodeSubmit(code)
-                    }
-                }
-            ),
-            shape = RoundedCornerShape(14.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(barcodeFocusRequester)
-                .testTag("input_barcode_scanner")
-        )
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Text Search & Categories Row
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            OutlinedTextField(
+                value = barcodeInputText,
+                onValueChange = { input ->
+                    if (input.endsWith("\n") || input.endsWith("\r")) {
+                        val scanned = input.trim()
+                        if (scanned.isNotEmpty()) {
+                            onBarcodeSubmit(scanned)
+                        }
+                    } else {
+                        onBarcodeInputChanged(input)
+                    }
+                },
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.pos_barcode_input_hint),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.QrCode,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                trailingIcon = {
+                    if (barcodeInputText.isNotBlank()) {
+                        IconButton(onClick = { onBarcodeSubmit(barcodeInputText.trim()) }) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "Tambah Barcode",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Ascii,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        val code = barcodeInputText.trim()
+                        if (code.isNotEmpty()) {
+                            onBarcodeSubmit(code)
+                        }
+                    }
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(barcodeFocusRequester)
+                    .testTag("input_barcode_scanner")
+            )
+
             OutlinedTextField(
                 value = uiState.searchQuery,
                 onValueChange = onSearchChanged,
-                placeholder = { Text(stringResource(R.string.pos_search_hint)) },
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.pos_search_hint),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
                 trailingIcon = {
                     if (uiState.searchQuery.isNotEmpty()) {
@@ -423,39 +407,39 @@ private fun CatalogSection(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
-                    .weight(0.45f)
+                    .weight(1f)
                     .testTag("input_pos_search")
             )
+        }
 
-            // Scrollable category filter chips
-            Row(
-                modifier = Modifier
-                    .weight(0.55f)
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilterChip(
+                selected = uiState.selectedCategoryId == null,
+                onClick = { onCategorySelected(null) },
+                label = { Text(stringResource(R.string.pos_tab_all)) },
+                modifier = Modifier.testTag("pos_chip_cat_all")
+            )
+
+            uiState.categories.forEach { category ->
                 FilterChip(
-                    selected = uiState.selectedCategoryId == null,
-                    onClick = { onCategorySelected(null) },
-                    label = { Text(stringResource(R.string.pos_tab_all)) },
-                    modifier = Modifier.testTag("pos_chip_cat_all")
+                    selected = uiState.selectedCategoryId == category.categoryId,
+                    onClick = { onCategorySelected(category.categoryId) },
+                    label = { Text(category.name) },
+                    modifier = Modifier.testTag("pos_chip_cat_${category.categoryId}")
                 )
-
-                uiState.categories.forEach { category ->
-                    FilterChip(
-                        selected = uiState.selectedCategoryId == category.categoryId,
-                        onClick = { onCategorySelected(category.categoryId) },
-                        label = { Text(category.name) },
-                        modifier = Modifier.testTag("pos_chip_cat_${category.categoryId}")
-                    )
-                }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-        // Product Catalog Grid
         if (uiState.catalogProducts.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -471,10 +455,10 @@ private fun CatalogSection(
             }
         } else {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 160.dp),
-                contentPadding = PaddingValues(bottom = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
+                columns = GridCells.Adaptive(minSize = 140.dp),
+                contentPadding = PaddingValues(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
@@ -491,9 +475,6 @@ private fun CatalogSection(
     }
 }
 
-/**
- * Compact, clickable product card for POS catalog browsing.
- */
 @Composable
 private fun PosProductGridCard(
     product: ProductEntity,
@@ -521,7 +502,7 @@ private fun PosProductGridCard(
                     Modifier
                 }
             ),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isOutOfStock) {
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -535,14 +516,13 @@ private fun PosProductGridCard(
         )
     ) {
         Column(
-            modifier = Modifier.padding(10.dp)
+            modifier = Modifier.padding(8.dp)
         ) {
-            // Photo Thumbnail
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(96.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .height(72.dp)
+                    .clip(RoundedCornerShape(8.dp))
                     .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
@@ -561,11 +541,10 @@ private fun PosProductGridCard(
                         imageVector = Icons.Default.Image,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
 
-                // Out of stock overlay badge
                 if (isOutOfStock) {
                     Surface(
                         color = MaterialTheme.colorScheme.error.copy(alpha = 0.88f),
@@ -582,28 +561,24 @@ private fun PosProductGridCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
-            // Product Name
             Text(
                 text = product.name,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.SemiBold,
-                maxLines = 2,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 color = if (isOutOfStock) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f) else MaterialTheme.colorScheme.onSurface
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Selling Price
             Text(
                 text = product.price.toRupiah(),
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = if (isOutOfStock) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f) else MaterialTheme.colorScheme.primary
             )
 
-            // Stock Count
             Text(
                 text = stringResource(R.string.pos_item_stock_info, product.stock),
                 style = MaterialTheme.typography.labelSmall,
@@ -613,9 +588,6 @@ private fun PosProductGridCard(
     }
 }
 
-/**
- * Right/Bottom Section: Active shopping cart list, item stepper, delete buttons, and checkout bar.
- */
 @Composable
 private fun CartSection(
     uiState: PosUiState,
@@ -627,29 +599,33 @@ private fun CartSection(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(12.dp)
     ) {
-        // Cart Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
                     imageVector = Icons.Default.ShoppingCart,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = stringResource(R.string.pos_cart_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 if (uiState.totalItemCount > 0) {
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Surface(
                         shape = CircleShape,
                         color = MaterialTheme.colorScheme.primaryContainer
@@ -659,6 +635,8 @@ private fun CartSection(
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            maxLines = 1,
+                            softWrap = false,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                         )
                     }
@@ -668,17 +646,24 @@ private fun CartSection(
             if (uiState.cartItems.isNotEmpty()) {
                 TextButton(
                     onClick = onClearCartClick,
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
                     colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
-                    modifier = Modifier.testTag("btn_clear_cart")
+                    modifier = Modifier
+                        .height(32.dp)
+                        .testTag("btn_clear_cart")
                 ) {
-                    Text(stringResource(R.string.pos_cart_clear))
+                    Text(
+                        text = stringResource(R.string.pos_cart_clear),
+                        maxLines = 1,
+                        softWrap = false,
+                        style = MaterialTheme.typography.labelMedium
+                    )
                 }
             }
         }
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
 
-        // Cart Line Items List
         if (uiState.cartItems.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -690,25 +675,19 @@ private fun CartSection(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(20.dp)
+                    modifier = Modifier.padding(8.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.ShoppingCart,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
-                        modifier = Modifier.size(56.dp)
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = stringResource(R.string.pos_cart_empty_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        modifier = Modifier.size(36.dp)
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = stringResource(R.string.pos_cart_empty_subtitle),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = stringResource(R.string.pos_cart_empty_title),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -718,7 +697,7 @@ private fun CartSection(
                     .weight(1f)
                     .fillMaxWidth()
                     .testTag("pos_cart_list"),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 items(
                     items = uiState.cartItems,
@@ -733,59 +712,48 @@ private fun CartSection(
             }
         }
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 10.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
 
-        // Total Display & Prominent Checkout Button
-        Column(
-            modifier = Modifier.fillMaxWidth()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Column {
                 Text(
                     text = stringResource(R.string.pos_cart_total),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
                     text = uiState.totalAmount.toRupiah(),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.testTag("text_cart_total")
                 )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
             Button(
                 onClick = onCheckoutClick,
                 enabled = uiState.cartItems.isNotEmpty(),
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
+                    .height(44.dp)
                     .testTag("btn_pos_checkout")
             ) {
                 Text(
-                    text = if (uiState.totalAmount > 0) {
-                        stringResource(R.string.pos_btn_checkout_with_total, uiState.totalAmount.toRupiah())
-                    } else {
-                        stringResource(R.string.pos_btn_checkout)
-                    },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = stringResource(R.string.pos_btn_checkout),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }
     }
 }
 
-/**
- * Individual row in the POS active cart with stepper and subtotal.
- */
 @Composable
 private fun CartItemRow(
     item: CartItemUiModel,
@@ -796,42 +764,43 @@ private fun CartItemRow(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("cart_item_${item.product.productId}"),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
+                .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Product Name & Unit Price
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = item.product.name,
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "${item.unitPrice.toRupiah()} / unit",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "${item.unitPrice.toRupiah()} = ${item.subtotal.toRupiah()}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.testTag("subtotal_${item.product.productId}")
                 )
             }
 
-            // Quantity Stepper: [-] Qty [+]
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 IconButton(
                     onClick = { onUpdateQuantity(item.product.productId, -1) },
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(28.dp)
                         .testTag("btn_decrement_${item.product.productId}")
                 ) {
                     Icon(
@@ -843,16 +812,18 @@ private fun CartItemRow(
 
                 Text(
                     text = item.quantity.toString(),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.testTag("qty_text_${item.product.productId}")
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .testTag("qty_text_${item.product.productId}")
                 )
 
                 IconButton(
                     onClick = { onUpdateQuantity(item.product.productId, 1) },
                     enabled = item.quantity < item.maxAvailableStock,
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(28.dp)
                         .testTag("btn_increment_${item.product.productId}")
                 ) {
                     Icon(
@@ -861,32 +832,20 @@ private fun CartItemRow(
                         modifier = Modifier.size(16.dp)
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Subtotal
-            Text(
-                text = item.subtotal.toRupiah(),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.testTag("subtotal_${item.product.productId}")
-            )
-
-            // Remove Button
-            IconButton(
-                onClick = { onRemoveItem(item.product.productId) },
-                modifier = Modifier
-                    .size(32.dp)
-                    .testTag("btn_remove_${item.product.productId}")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.DeleteOutline,
-                    contentDescription = "Hapus",
-                    tint = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.size(18.dp)
-                )
+                IconButton(
+                    onClick = { onRemoveItem(item.product.productId) },
+                    modifier = Modifier
+                        .size(28.dp)
+                        .testTag("btn_remove_${item.product.productId}")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DeleteOutline,
+                        contentDescription = "Hapus",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }

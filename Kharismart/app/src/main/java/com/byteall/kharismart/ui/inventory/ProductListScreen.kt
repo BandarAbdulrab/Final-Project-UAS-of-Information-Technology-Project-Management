@@ -2,7 +2,6 @@ package com.byteall.kharismart.ui.inventory
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -71,19 +70,6 @@ import com.byteall.kharismart.di.appViewModel
 import com.byteall.kharismart.util.format.toRupiah
 import com.byteall.kharismart.util.image.ImageStorageManager
 
-/**
- * Screen displaying the master product catalog, categories, and inventory actions (SRS-F04, F11, F12).
- *
- * Features:
- * - Real-time search by name or barcode.
- * - Horizontal category tabs and low-stock filter chip.
- * - Responsive tablet grid showing product cards with stock pills:
- *   - 'Aman' (Green)
- *   - 'Menipis' (Yellow / warning)
- *   - 'Habis' (Red / error)
- * - Cashier role: hides cost prices and restock/opname actions.
- * - Admin role: shows full cost price, "+ Tambah Produk" FAB, restock, opname, and edit modals.
- */
 @Composable
 fun ProductListScreen(
     viewModel: InventoryViewModel = appViewModel { container ->
@@ -96,7 +82,6 @@ fun ProductListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Toast/Snackbar notifications
     LaunchedEffect(uiState.userMessage) {
         uiState.userMessage?.let {
             snackbarHostState.showSnackbar(it)
@@ -131,34 +116,36 @@ fun ProductListScreen(
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            // Search Bar & Filter Controls
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                OutlinedTextField(
-                    value = uiState.searchQuery,
-                    onValueChange = { viewModel.setSearchQuery(it) },
-                    placeholder = { Text(stringResource(R.string.inventory_search_hint)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = null)
-                    },
-                    trailingIcon = {
-                        if (uiState.searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear search")
-                            }
+            OutlinedTextField(
+                value = uiState.searchQuery,
+                onValueChange = { viewModel.setSearchQuery(it) },
+                placeholder = { Text(stringResource(R.string.inventory_search_hint)) },
+                leadingIcon = {
+                    Icon(Icons.Default.Search, contentDescription = null)
+                },
+                trailingIcon = {
+                    if (uiState.searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.setSearchQuery("") }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
                         }
-                    },
-                    singleLine = true,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("input_inventory_search")
-                )
+                    }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("input_inventory_search")
+            )
 
-                // Quick Toggle: Low Stock Only
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 FilterChip(
                     selected = uiState.lowStockFilter,
                     onClick = { viewModel.toggleLowStockFilter() },
@@ -172,19 +159,7 @@ fun ProductListScreen(
                     ),
                     modifier = Modifier.testTag("chip_low_stock_filter")
                 )
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Category Chips Row
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // "Semua" Chip
                 FilterChip(
                     selected = uiState.selectedCategoryId == null,
                     onClick = { viewModel.selectCategory(null) },
@@ -192,7 +167,6 @@ fun ProductListScreen(
                     modifier = Modifier.testTag("chip_cat_all")
                 )
 
-                // Individual Category Chips
                 uiState.categories.forEach { category ->
                     FilterChip(
                         selected = uiState.selectedCategoryId == category.categoryId,
@@ -205,7 +179,6 @@ fun ProductListScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Main Product Grid
             if (uiState.isLoading && uiState.products.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -214,7 +187,6 @@ fun ProductListScreen(
                     CircularProgressIndicator()
                 }
             } else if (uiState.products.isEmpty()) {
-                // Empty state
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -260,7 +232,7 @@ fun ProductListScreen(
                 }
             } else {
                 LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 340.dp),
+                    columns = GridCells.Adaptive(minSize = 300.dp),
                     contentPadding = PaddingValues(bottom = 80.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -283,7 +255,6 @@ fun ProductListScreen(
         }
     }
 
-    // Modal Dialog Handlers
     when (val dialog = uiState.dialogState) {
         is InventoryDialogState.AddProduct -> {
             AddEditProductDialog(
@@ -335,9 +306,6 @@ fun ProductListScreen(
     }
 }
 
-/**
- * Individual Card displaying product details, photo, stock status, and actions.
- */
 @Composable
 private fun ProductItemCard(
     item: ProductCardUiModel,
@@ -373,7 +341,6 @@ private fun ProductItemCard(
                 verticalAlignment = Alignment.Top,
                 horizontalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Product Photo / Thumbnail (Coil AsyncImage)
                 Box(
                     modifier = Modifier
                         .size(88.dp)
@@ -406,11 +373,9 @@ private fun ProductItemCard(
                     }
                 }
 
-                // Product Details
                 Column(
                     modifier = Modifier.weight(1f)
                 ) {
-                    // Category Badge & Barcode
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -447,7 +412,6 @@ private fun ProductItemCard(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Product Name
                     Text(
                         text = product.name,
                         style = MaterialTheme.typography.titleMedium,
@@ -457,7 +421,6 @@ private fun ProductItemCard(
 
                     Spacer(modifier = Modifier.height(4.dp))
 
-                    // Price Section: Selling price (and Cost price for Admin)
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -471,7 +434,7 @@ private fun ProductItemCard(
 
                         if (isAdmin) {
                             Text(
-                                text = "•  Modal: ${product.costPrice.toRupiah()}",
+                                text = "• Modal: ${product.costPrice.toRupiah()}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -482,7 +445,6 @@ private fun ProductItemCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Stock Count & Status Pill Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -494,11 +456,9 @@ private fun ProductItemCard(
                     fontWeight = FontWeight.SemiBold
                 )
 
-                // Stock Status Pill: Aman (Green), Menipis (Yellow), Habis (Red)
                 StockStatusPill(status = item.stockStatus)
             }
 
-            // Admin Action Buttons: Restock, Opname, Edit
             if (isAdmin) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(
@@ -508,24 +468,34 @@ private fun ProductItemCard(
                 ) {
                     OutlinedButton(
                         onClick = onRestockClick,
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("btn_item_restock_${product.productId}")
                     ) {
                         Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.inventory_btn_restock))
+                        Text(
+                            text = stringResource(R.string.inventory_btn_restock),
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
 
                     OutlinedButton(
                         onClick = onOpnameClick,
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("btn_item_opname_${product.productId}")
                     ) {
                         Icon(Icons.Default.Tune, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(stringResource(R.string.inventory_btn_opname))
+                        Text(
+                            text = stringResource(R.string.inventory_btn_opname),
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
 
                     IconButton(
@@ -544,12 +514,6 @@ private fun ProductItemCard(
     }
 }
 
-/**
- * Status pill badge for product inventory state.
- * - 'Aman' (green)
- * - 'Menipis' (yellow/amber)
- * - 'Habis' (red)
- */
 @Composable
 private fun StockStatusPill(status: StockStatus) {
     val (labelRes, containerColor, contentColor) = when (status) {

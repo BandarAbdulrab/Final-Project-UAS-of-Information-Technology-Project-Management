@@ -6,6 +6,7 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.byteall.kharismart.ui.theme.KharismartTheme
@@ -41,15 +42,17 @@ class CheckoutDialogTest {
         composeTestRule.onNodeWithTag("checkout_tab_qris").assertIsDisplayed()
         composeTestRule.onNodeWithTag("checkout_tab_credit").assertIsDisplayed()
 
-        // Submit button must be disabled because tendered cash is 0
         composeTestRule.onNodeWithTag("checkout_btn_submit").assertIsNotEnabled()
 
-        // Input tendered amount of 60000 (enough for 50000)
-        composeTestRule.onNodeWithTag("checkout_input_cash_paid").performTextInput("60000")
+        composeTestRule.onNodeWithTag("checkout_input_cash_paid")
+            .performScrollTo()
+            .performTextInput("60000")
 
-        // Submit button becomes enabled and change display is shown
+        composeTestRule.waitForIdle()
         composeTestRule.onNodeWithTag("checkout_btn_submit").assertIsEnabled()
-        composeTestRule.onNodeWithTag("checkout_change_amount").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("checkout_change_amount", useUnmergedTree = true)
+            .performScrollTo()
+            .assertIsDisplayed()
     }
 
     @Test
@@ -69,15 +72,16 @@ class CheckoutDialogTest {
             }
         }
 
-        // Switch to QRIS tab
         composeTestRule.onNodeWithTag("checkout_tab_qris").performClick()
+        composeTestRule.waitForIdle()
 
-        // Checkbox must be visible and submit disabled until checked
-        composeTestRule.onNodeWithTag("checkout_qris_checkbox").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("checkout_qris_checkbox", useUnmergedTree = true)
+            .performScrollTo()
+            .assertIsDisplayed()
         composeTestRule.onNodeWithTag("checkout_btn_submit").assertIsNotEnabled()
 
-        // Check the confirmation box
-        composeTestRule.onNodeWithTag("checkout_qris_checkbox").performClick()
+        composeTestRule.onNodeWithTag("checkout_qris_checkbox", useUnmergedTree = true)
+            .performClick()
         composeTestRule.onNodeWithTag("checkout_btn_submit").assertIsEnabled()
     }
 
@@ -98,17 +102,16 @@ class CheckoutDialogTest {
             }
         }
 
-        // Switch to Credit tab
         composeTestRule.onNodeWithTag("checkout_tab_credit").performClick()
 
-        // Customer name input is displayed and submit is disabled
-        composeTestRule.onNodeWithTag("checkout_input_customer_name").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("checkout_input_customer_name")
+            .performScrollTo()
+            .assertIsDisplayed()
         composeTestRule.onNodeWithTag("checkout_btn_submit").assertIsNotEnabled()
 
-        // Type customer name
-        composeTestRule.onNodeWithTag("checkout_input_customer_name").performTextInput("Ibu Siti")
+        composeTestRule.onNodeWithTag("checkout_input_customer_name")
+            .performTextInput("Ibu Siti")
 
-        // Now submit is enabled
         composeTestRule.onNodeWithTag("checkout_btn_submit").assertIsEnabled()
     }
 }

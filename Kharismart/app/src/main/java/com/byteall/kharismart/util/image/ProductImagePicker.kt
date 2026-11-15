@@ -7,7 +7,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,22 +52,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * Reusable Compose component for picking, displaying, and managing product photos.
- *
- * Features:
- * - Uses Coil's [AsyncImage] to load photos from private app storage.
- * - Displays a fallback placeholder icon when no photo is attached.
- * - Integrates Android's [ActivityResultContracts.PickVisualMedia] photo picker contract.
- * - Saves selected images via [ImageStorageManager] ensuring compression to <= 1 MB and max 1200 px.
- * - Provides a "Change Photo" / "Select Photo" button.
- * - Provides a "Delete Photo" button when a photo is currently set.
- *
- * @param photoFilename Filename of the current product photo (e.g., "<uuid>.jpg"), or null if unset.
- * @param onPhotoChanged Callback invoked with the new saved filename, or null when removed.
- * @param modifier Composable modifier.
- * @param enabled Whether picker controls are interactive.
- */
 @Composable
 fun ProductImagePicker(
     photoFilename: String?,
@@ -80,7 +63,6 @@ fun ProductImagePicker(
     val coroutineScope = rememberCoroutineScope()
     var isLoading by remember { mutableStateOf(false) }
 
-    // Resolve the file from private app storage
     val imageFile = remember(photoFilename) {
         if (!photoFilename.isNullOrBlank()) {
             ImageStorageManager.getImageFile(context, photoFilename)
@@ -89,7 +71,6 @@ fun ProductImagePicker(
         }
     }
 
-    // Photo picker launcher contract
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
@@ -123,7 +104,6 @@ fun ProductImagePicker(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Preview Box / Thumbnail
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -133,18 +113,7 @@ fun ProductImagePicker(
                         BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         RoundedCornerShape(12.dp)
                     )
-                    .testTag("product_image_preview_box")
-                    .then(
-                        if (enabled && !isLoading) {
-                            Modifier.clickable {
-                                photoPickerLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                            }
-                        } else {
-                            Modifier
-                        }
-                    ),
+                    .testTag("product_image_preview_box"),
                 contentAlignment = Alignment.Center
             ) {
                 if (imageFile != null && imageFile.exists()) {
@@ -160,7 +129,6 @@ fun ProductImagePicker(
                             .testTag("product_async_image")
                     )
                 } else {
-                    // Fallback placeholder icon
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center,
@@ -183,7 +151,6 @@ fun ProductImagePicker(
                     }
                 }
 
-                // Loading overlay while processing/compressing
                 if (isLoading) {
                     Box(
                         modifier = Modifier
@@ -200,12 +167,10 @@ fun ProductImagePicker(
                 }
             }
 
-            // Action Buttons and Guidelines Column
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Change / Pick Photo Button
                 Button(
                     onClick = {
                         photoPickerLauncher.launch(
@@ -230,7 +195,6 @@ fun ProductImagePicker(
                     )
                 }
 
-                // Delete Photo Button (only shown if a photo is attached)
                 if (photoFilename != null) {
                     OutlinedButton(
                         onClick = {
@@ -260,7 +224,6 @@ fun ProductImagePicker(
                     }
                 }
 
-                // Format & Size Hint
                 Text(
                     text = stringResource(R.string.product_photo_hint),
                     style = MaterialTheme.typography.bodySmall,

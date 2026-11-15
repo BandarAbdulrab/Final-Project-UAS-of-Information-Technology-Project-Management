@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -59,17 +58,6 @@ import com.byteall.kharismart.ui.receipt.ReceiptDialog
 import com.byteall.kharismart.util.format.toRupiah
 import com.byteall.kharismart.util.time.WibClock
 
-/**
- * Transaction History and Receipt Reprinting Screen (SRS-F09, F10).
- *
- * Capabilities:
- * - List past transactions newest first with payment method badges.
- * - Search by receipt number or cashier name.
- * - Period filter presets: Hari Ini, Kemarin, Minggu Ini, Bulan Ini (Admin only; Cashiers locked to Today).
- * - Admin financial insights: Gross profit calculation (hidden from Cashiers).
- * - Expandable itemized inspection displaying items and linked credit debtor status.
- * - One-touch Receipt Reprinting via [ReceiptDialog].
- */
 @Composable
 fun HistoryScreen(
     viewModel: HistoryViewModel = appViewModel { container ->
@@ -89,7 +77,6 @@ fun HistoryScreen(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Header Controls: Search bar & Period Presets
             SearchAndFilterHeader(
                 searchQuery = uiState.searchQuery,
                 onSearchChanged = { viewModel.onSearchQueryChanged(it) },
@@ -98,27 +85,27 @@ fun HistoryScreen(
                 isAdmin = uiState.isAdmin
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Period Summary Card
-            PeriodSummaryCard(
-                salesCount = uiState.totalSalesCount,
-                revenue = uiState.totalRevenue,
-                grossProfit = uiState.totalGrossProfit,
-                isAdmin = uiState.isAdmin
-            )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                contentPadding = PaddingValues(bottom = 16.dp)
+            ) {
+                item {
+                    PeriodSummaryCard(
+                        salesCount = uiState.totalSalesCount,
+                        revenue = uiState.totalRevenue,
+                        grossProfit = uiState.totalGrossProfit,
+                        isAdmin = uiState.isAdmin
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Transactions List or Empty State
-            if (uiState.transactions.isEmpty()) {
-                EmptyHistoryState()
-            } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    contentPadding = PaddingValues(bottom = 16.dp)
-                ) {
+                if (uiState.transactions.isEmpty()) {
+                    item {
+                        EmptyHistoryState()
+                    }
+                } else {
                     items(uiState.transactions, key = { it.transaction.transactionId }) { item ->
                         val isExpanded = uiState.expandedIds.contains(item.transaction.transactionId)
                         val receiptData = uiState.expandedReceipts[item.transaction.transactionId]
@@ -137,7 +124,6 @@ fun HistoryScreen(
         }
     }
 
-    // Active Receipt Dialog (Reprint)
     uiState.activeReceiptDialog?.let { receipt ->
         ReceiptDialog(
             receipt = receipt,
@@ -175,9 +161,8 @@ private fun SearchAndFilterHeader(
                 .testTag("history_search_input")
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Period Filters
         if (isAdmin) {
             Row(
                 modifier = Modifier
@@ -211,7 +196,6 @@ private fun SearchAndFilterHeader(
                 )
             }
         } else {
-            // Cashier Mode Badge
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(vertical = 4.dp)
@@ -250,7 +234,7 @@ private fun PeriodSummaryCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(14.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -345,7 +329,6 @@ private fun TransactionHistoryCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -397,7 +380,6 @@ private fun TransactionHistoryCard(
                 }
             }
 
-            // Admin gross profit snippet
             if (isAdmin) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -408,7 +390,6 @@ private fun TransactionHistoryCard(
                 )
             }
 
-            // Expanded Item Lines Section
             AnimatedVisibility(visible = isExpanded) {
                 Column(modifier = Modifier.padding(top = 12.dp)) {
                     HorizontalDivider()
@@ -453,7 +434,6 @@ private fun TransactionHistoryCard(
                             }
                         }
 
-                        // Linked Credit Customer Info if applicable
                         if (trx.method == PaymentMethod.CREDIT && receiptData.debt != null) {
                             val debt = receiptData.debt
                             val remaining = debt.totalAmount - debt.paidAmount
@@ -486,7 +466,6 @@ private fun TransactionHistoryCard(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Reprint Button
                         Button(
                             onClick = onReprint,
                             modifier = Modifier
@@ -516,7 +495,7 @@ private fun TransactionHistoryCard(
 private fun EmptyHistoryState() {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center

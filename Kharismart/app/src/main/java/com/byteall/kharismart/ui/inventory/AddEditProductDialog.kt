@@ -1,9 +1,6 @@
 package com.byteall.kharismart.ui.inventory
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
@@ -27,6 +23,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
@@ -57,14 +54,6 @@ import com.byteall.kharismart.util.format.digitsToLongOrNull
 import com.byteall.kharismart.util.format.toRupiah
 import com.byteall.kharismart.util.image.ProductImagePicker
 
-/**
- * Modal form dialog for adding a new product or editing an existing product.
- *
- * Requirements:
- * - Barcode, Name, Category, Selling Price (>0), Cost Price (>=0), Initial Stock, Minimum Stock, Photo.
- * - Shows warning indicator if Selling Price < Cost Price.
- * - For existing products, current stock is read-only per BR-09 (stock modified only by restock/opname/sales).
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEditProductDialog(
@@ -92,10 +81,10 @@ fun AddEditProductDialog(
         mutableStateOf(if (isEditMode) initialProduct!!.price.toString() else "")
     }
     var costPriceText by remember {
-        mutableStateOf(if (isEditMode) initialProduct!!.costPrice.toString() else "0")
+        mutableStateOf(if (isEditMode) initialProduct!!.costPrice.toString() else "")
     }
     var initialStockText by remember {
-        mutableStateOf(if (isEditMode) initialProduct!!.stock.toString() else "0")
+        mutableStateOf(if (isEditMode) initialProduct!!.stock.toString() else "")
     }
     var minStockText by remember {
         mutableStateOf(initialProduct?.minStock?.toString() ?: "")
@@ -119,271 +108,268 @@ fun AddEditProductDialog(
             modifier = Modifier
                 .widthIn(min = 340.dp, max = 640.dp)
                 .fillMaxWidth(0.92f)
-                .padding(vertical = 24.dp),
+                .padding(vertical = 8.dp),
             shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp
         ) {
             Column(
                 modifier = Modifier
-                    .padding(24.dp)
-                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth()
+                    .padding(16.dp)
             ) {
-                // Dialog Title
                 Text(
                     text = stringResource(
                         if (isEditMode) R.string.dialog_edit_product_title else R.string.dialog_add_product_title
                     ),
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // Photo Picker Integration (Day 6 Component)
-                ProductImagePicker(
-                    photoFilename = photoFilename,
-                    onPhotoChanged = { photoFilename = it }
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Product Name
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = {
-                        name = it
-                        localError = null
-                    },
-                    label = { Text(stringResource(R.string.dialog_product_name)) },
-                    placeholder = { Text(stringResource(R.string.dialog_product_name_hint)) },
-                    singleLine = true,
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("input_product_name")
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Category Selector & "+ Kategori Baru"
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    ExposedDropdownMenuBox(
-                        expanded = categoryDropdownExpanded,
-                        onExpandedChange = { categoryDropdownExpanded = !categoryDropdownExpanded },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        OutlinedTextField(
-                            value = selectedCategoryName,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text(stringResource(R.string.dialog_product_category)) },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryDropdownExpanded) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                                .testTag("select_category_anchor")
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = categoryDropdownExpanded,
-                            onDismissRequest = { categoryDropdownExpanded = false }
-                        ) {
-                            categories.forEach { category ->
-                                DropdownMenuItem(
-                                    text = { Text(category.name) },
-                                    onClick = {
-                                        selectedCategoryId = category.categoryId
-                                        categoryDropdownExpanded = false
-                                        localError = null
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    if (isAdmin) {
-                        OutlinedButton(
-                            onClick = onAddNewCategory,
-                            modifier = Modifier
-                                .height(56.dp)
-                                .testTag("btn_new_category")
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.dialog_add_category))
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Barcode
-                OutlinedTextField(
-                    value = barcode,
-                    onValueChange = {
-                        barcode = it
-                        localError = null
-                    },
-                    label = { Text(stringResource(R.string.dialog_product_barcode)) },
-                    placeholder = { Text(stringResource(R.string.dialog_product_barcode_hint)) },
-                    leadingIcon = {
-                        Icon(Icons.Default.QrCode, contentDescription = null)
-                    },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("input_barcode")
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Prices: Selling Price & Cost Price
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Selling Price
-                    OutlinedTextField(
-                        value = sellingPriceText,
-                        onValueChange = {
-                            sellingPriceText = it.filter { ch -> ch.isDigit() }
-                            localError = null
-                        },
-                        label = { Text(stringResource(R.string.dialog_product_selling_price)) },
-                        supportingText = {
-                            if (sellingPriceLong > 0) {
-                                Text(sellingPriceLong.toRupiah(), fontWeight = FontWeight.SemiBold)
-                            }
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("input_selling_price")
+                    ProductImagePicker(
+                        photoFilename = photoFilename,
+                        onPhotoChanged = { photoFilename = it }
                     )
 
-                    // Cost Price (Only visible/editable for Admin)
-                    if (isAdmin) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = {
+                            name = it
+                            localError = null
+                        },
+                        label = { Text(stringResource(R.string.dialog_product_name)) },
+                        placeholder = { Text(stringResource(R.string.dialog_product_name_hint)) },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_product_name")
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ExposedDropdownMenuBox(
+                            expanded = categoryDropdownExpanded,
+                            onExpandedChange = { categoryDropdownExpanded = !categoryDropdownExpanded },
+                            modifier = Modifier.weight(1.3f)
+                        ) {
+                            OutlinedTextField(
+                                value = selectedCategoryName,
+                                onValueChange = {},
+                                readOnly = true,
+                                singleLine = true,
+                                label = { Text(stringResource(R.string.dialog_product_category)) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryDropdownExpanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                                    .testTag("select_category_anchor")
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = categoryDropdownExpanded,
+                                onDismissRequest = { categoryDropdownExpanded = false }
+                            ) {
+                                categories.forEach { category ->
+                                    DropdownMenuItem(
+                                        text = { Text(category.name) },
+                                        onClick = {
+                                            selectedCategoryId = category.categoryId
+                                            categoryDropdownExpanded = false
+                                            localError = null
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        if (isAdmin) {
+                            OutlinedButton(
+                                onClick = onAddNewCategory,
+                                modifier = Modifier
+                                    .height(56.dp)
+                                    .testTag("btn_new_category")
+                            ) {
+                                Text(stringResource(R.string.dialog_add_category))
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = barcode,
+                        onValueChange = {
+                            barcode = it
+                            localError = null
+                        },
+                        label = { Text(stringResource(R.string.dialog_product_barcode)) },
+                        placeholder = { Text(stringResource(R.string.dialog_product_barcode_hint)) },
+                        leadingIcon = {
+                            Icon(Icons.Default.QrCode, contentDescription = null)
+                        },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_barcode")
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
                         OutlinedTextField(
-                            value = costPriceText,
+                            value = sellingPriceText,
                             onValueChange = {
-                                costPriceText = it.filter { ch -> ch.isDigit() }
+                                sellingPriceText = it.filter { ch -> ch.isDigit() }
                                 localError = null
                             },
-                            label = { Text(stringResource(R.string.dialog_product_cost_price)) },
+                            label = { Text(stringResource(R.string.dialog_product_selling_price)) },
                             supportingText = {
-                                if (costPriceLong >= 0) {
-                                    Text(costPriceLong.toRupiah())
+                                if (sellingPriceLong > 0) {
+                                    Text(sellingPriceLong.toRupiah(), fontWeight = FontWeight.SemiBold)
                                 }
                             },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             singleLine = true,
                             modifier = Modifier
                                 .weight(1f)
-                                .testTag("input_cost_price")
+                                .testTag("input_selling_price")
+                        )
+
+                        if (isAdmin) {
+                            OutlinedTextField(
+                                value = costPriceText,
+                                onValueChange = {
+                                    costPriceText = it.filter { ch -> ch.isDigit() }
+                                    localError = null
+                                },
+                                label = { Text(stringResource(R.string.dialog_product_cost_price)) },
+                                placeholder = { Text("0") },
+                                supportingText = {
+                                    if (costPriceLong >= 0) {
+                                        Text(costPriceLong.toRupiah())
+                                    }
+                                },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("input_cost_price")
+                            )
+                        }
+                    }
+
+                    if (isAdmin && isPriceBelowCost) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("price_below_cost_warning")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(
+                                        R.string.dialog_price_warning,
+                                        sellingPriceLong.toRupiah(),
+                                        costPriceLong.toRupiah()
+                                    ),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = initialStockText,
+                            onValueChange = {
+                                initialStockText = it.filter { ch -> ch.isDigit() }
+                                localError = null
+                            },
+                            label = { Text(stringResource(R.string.dialog_product_initial_stock)) },
+                            placeholder = { Text("0") },
+                            supportingText = {
+                                if (isEditMode) {
+                                    Text(stringResource(R.string.dialog_product_stock_locked_hint))
+                                }
+                            },
+                            enabled = !isEditMode,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("input_initial_stock")
+                        )
+
+                        OutlinedTextField(
+                            value = minStockText,
+                            onValueChange = {
+                                minStockText = it.filter { ch -> ch.isDigit() }
+                                localError = null
+                            },
+                            label = { Text(stringResource(R.string.dialog_product_min_stock)) },
+                            placeholder = {
+                                Text(stringResource(R.string.dialog_product_min_stock_hint, defaultMinStock))
+                            },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("input_min_stock")
+                        )
+                    }
+
+                    localError?.let { err ->
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = err,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
 
-                // Price Warning Indicator: Selling Price < Cost Price
-                if (isAdmin && isPriceBelowCost) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(
-                                    R.string.dialog_price_warning,
-                                    sellingPriceLong.toRupiah(),
-                                    costPriceLong.toRupiah()
-                                ),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onErrorContainer
-                            )
-                        }
-                    }
-                }
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Stock Fields: Initial Stock & Minimum Stock
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Initial Stock (Only for new products; read-only for editing per BR-09)
-                    OutlinedTextField(
-                        value = initialStockText,
-                        onValueChange = {
-                            initialStockText = it.filter { ch -> ch.isDigit() }
-                            localError = null
-                        },
-                        label = { Text(stringResource(R.string.dialog_product_initial_stock)) },
-                        supportingText = {
-                            if (isEditMode) {
-                                Text(stringResource(R.string.dialog_product_stock_locked_hint))
-                            }
-                        },
-                        enabled = !isEditMode,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("input_initial_stock")
-                    )
-
-                    // Minimum Stock
-                    OutlinedTextField(
-                        value = minStockText,
-                        onValueChange = {
-                            minStockText = it.filter { ch -> ch.isDigit() }
-                            localError = null
-                        },
-                        label = { Text(stringResource(R.string.dialog_product_min_stock)) },
-                        placeholder = {
-                            Text(stringResource(R.string.dialog_product_min_stock_hint, defaultMinStock))
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier
-                            .weight(1f)
-                            .testTag("input_min_stock")
-                    )
-                }
-
-                // Error message banner
-                localError?.let { err ->
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = err,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Dialog Action Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
@@ -400,7 +386,6 @@ fun AddEditProductDialog(
 
                     Button(
                         onClick = {
-                            // Validation checks
                             if (name.trim().isBlank()) {
                                 localError = "Nama produk wajib diisi"
                                 return@Button
@@ -448,9 +433,6 @@ fun AddEditProductDialog(
     }
 }
 
-/**
- * Small modal dialog for creating a category inline without leaving the product form.
- */
 @Composable
 fun AddCategoryDialog(
     onDismiss: () -> Unit,

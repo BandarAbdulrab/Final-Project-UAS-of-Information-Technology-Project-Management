@@ -3,9 +3,12 @@ package com.byteall.kharismart.ui.history
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.byteall.kharismart.data.local.DemoSeed
@@ -64,7 +67,6 @@ class HistoryScreenTest {
                 )
             )
 
-            // Seed a sample product and a transaction for Today
             val prodId = database.productDao().insert(
                 ProductEntity(
                     name = "Beras Rojolele 5kg",
@@ -120,28 +122,34 @@ class HistoryScreenTest {
             }
         }
 
-        // 1. Transaction card is displayed
+        // 1. Transaction card and Rp68.000 total are displayed
         composeTestRule.onNodeWithTag("history_screen").assertIsDisplayed()
         composeTestRule.onNodeWithText("TRX-20261115-099").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Rp68.000").assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Rp68.000").onFirst().assertIsDisplayed()
 
-        // 2. Click transaction card to expand
-        composeTestRule.onNodeWithTag("history_card_TRX-20261115-099").performClick()
+        // 2. Scroll to transaction card and click to expand
+        composeTestRule.onNodeWithTag("history_card_TRX-20261115-099")
+            .performScrollTo()
+            .performClick()
 
-        // 3. Item name and reprint button become visible
-        composeTestRule.waitUntil(3000) {
-            try {
-                composeTestRule.onNodeWithText("1 x Beras Rojolele 5kg").assertIsDisplayed()
-                true
-            } catch (e: Throwable) {
-                false
-            }
+        // 3. Wait for item node to enter semantics tree, then scroll and verify displayed
+        composeTestRule.waitUntil(5000) {
+            composeTestRule
+                .onAllNodesWithText("1 x Beras Rojolele 5kg", useUnmergedTree = true)
+                .fetchSemanticsNodes().isNotEmpty()
         }
 
-        composeTestRule.onNodeWithTag("history_btn_reprint_TRX-20261115-099").assertIsDisplayed()
+        composeTestRule.onNodeWithText("1 x Beras Rojolele 5kg", useUnmergedTree = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag("history_btn_reprint_TRX-20261115-099", useUnmergedTree = true)
+            .performScrollTo()
+            .assertIsDisplayed()
 
         // 4. Click reprint button to show ReceiptDialog
-        composeTestRule.onNodeWithTag("history_btn_reprint_TRX-20261115-099").performClick()
+        composeTestRule.onNodeWithTag("history_btn_reprint_TRX-20261115-099", useUnmergedTree = true)
+            .performClick()
 
         // 5. Receipt Dialog is displayed with reprint badge
         composeTestRule.onNodeWithTag("receipt_dialog").assertIsDisplayed()

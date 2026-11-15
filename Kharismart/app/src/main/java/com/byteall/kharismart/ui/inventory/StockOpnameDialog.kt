@@ -10,13 +10,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -37,49 +40,48 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.byteall.kharismart.R
 import com.byteall.kharismart.data.local.entity.ProductEntity
 import kotlin.math.abs
 
-/**
- * Modal dialog for physical stock opname inventory reconciliation (SRS-F12, BR-12).
- *
- * Requirements:
- * - Admin only.
- * - Enter Counted Stock (>= 0).
- * - Enter Reason text (required, non-blank).
- * - Real-time calculation of stock delta (difference).
- * - Clarifies BR-12: adjustments are inventory movements only, never affecting finance/cash reports.
- */
 @Composable
 fun StockOpnameDialog(
     product: ProductEntity,
     onDismiss: () -> Unit,
     onConfirmAdjustment: (countedStock: Int, reason: String) -> Unit
 ) {
-    var countedStockText by remember { mutableStateOf(product.stock.toString()) }
+    var countedStockText by remember { mutableStateOf("") }
     var reasonText by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     val countedStock = countedStockText.toIntOrNull() ?: product.stock
     val delta = countedStock - product.stock
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        )
+    ) {
         Surface(
             modifier = Modifier
                 .widthIn(min = 340.dp, max = 520.dp)
-                .fillMaxWidth(0.92f),
+                .fillMaxWidth(0.92f)
+                .padding(vertical = 12.dp),
             shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp
         ) {
             Column(
-                modifier = Modifier.padding(24.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
             ) {
-                // Header
                 Text(
                     text = stringResource(R.string.dialog_opname_title),
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -90,150 +92,151 @@ fun StockOpnameDialog(
                     fontWeight = FontWeight.SemiBold
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // System Stock Display Card
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    Row(
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.dialog_opname_system_stock, product.stock),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "${product.stock} unit",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = countedStockText,
+                        onValueChange = {
+                            countedStockText = it.filter { ch -> ch.isDigit() }
+                            errorMessage = null
+                        },
+                        label = { Text(stringResource(R.string.dialog_opname_counted_stock)) },
+                        placeholder = { Text(product.stock.toString()) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(14.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.dialog_opname_system_stock, product.stock),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = "${product.stock} unit",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Counted Stock Input (>= 0)
-                OutlinedTextField(
-                    value = countedStockText,
-                    onValueChange = {
-                        countedStockText = it.filter { ch -> ch.isDigit() }
-                        errorMessage = null
-                    },
-                    label = { Text(stringResource(R.string.dialog_opname_counted_stock)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("input_counted_stock")
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Reason for Adjustment Input (Required)
-                OutlinedTextField(
-                    value = reasonText,
-                    onValueChange = {
-                        reasonText = it
-                        errorMessage = null
-                    },
-                    label = { Text(stringResource(R.string.dialog_opname_reason)) },
-                    placeholder = { Text(stringResource(R.string.dialog_opname_reason_hint)) },
-                    singleLine = false,
-                    maxLines = 3,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("input_opname_reason")
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Delta preview card
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = when {
-                            delta < 0 -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
-                            delta > 0 -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
-                            else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                        }
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.dialog_opname_delta),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium
-                        )
-                        val deltaText = when {
-                            delta < 0 -> stringResource(R.string.dialog_opname_delta_negative, abs(delta))
-                            delta > 0 -> stringResource(R.string.dialog_opname_delta_positive, delta)
-                            else -> stringResource(R.string.dialog_opname_delta_zero)
-                        }
-                        val deltaColor = when {
-                            delta < 0 -> MaterialTheme.colorScheme.error
-                            delta > 0 -> Color(0xFF2E7D32)
-                            else -> MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                        Text(
-                            text = deltaText,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = deltaColor
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // BR-12 Info note
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        modifier = Modifier.size(16.dp)
+                            .testTag("input_counted_stock")
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = stringResource(R.string.dialog_opname_notice),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                    )
-                }
 
-                // Error message
-                errorMessage?.let { err ->
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = err,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium
+
+                    OutlinedTextField(
+                        value = reasonText,
+                        onValueChange = {
+                            reasonText = it
+                            errorMessage = null
+                        },
+                        label = { Text(stringResource(R.string.dialog_opname_reason)) },
+                        placeholder = { Text(stringResource(R.string.dialog_opname_reason_hint)) },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("input_opname_reason")
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = when {
+                                delta < 0 -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                                delta > 0 -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+                                else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                            }
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(10.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.dialog_opname_delta),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Medium
+                            )
+                            val deltaText = when {
+                                delta < 0 -> stringResource(R.string.dialog_opname_delta_negative, abs(delta))
+                                delta > 0 -> stringResource(R.string.dialog_opname_delta_positive, delta)
+                                else -> stringResource(R.string.dialog_opname_delta_zero)
+                            }
+                            val deltaColor = when {
+                                delta < 0 -> MaterialTheme.colorScheme.error
+                                delta > 0 -> Color(0xFF2E7D32)
+                                else -> MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                            Text(
+                                text = deltaText,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = deltaColor
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = stringResource(R.string.dialog_opname_notice),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                        )
+                    }
+
+                    errorMessage?.let { err ->
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = err,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(10.dp))
 
-                // Actions
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,

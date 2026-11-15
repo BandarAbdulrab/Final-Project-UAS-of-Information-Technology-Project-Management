@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,21 +52,6 @@ import com.byteall.kharismart.util.format.toRupiah
 import com.byteall.kharismart.util.printer.ReceiptPrinter
 import com.byteall.kharismart.util.printer.ReceiptUiModel
 
-/**
- * Visual Paper Receipt Preview Card and Printing Actions Dialog (SRS-F09, F10).
- *
- * Displays:
- * - Store header, date, receipt number, cashier name.
- * - Monospaced itemized table (Qty x Price = Subtotal).
- * - Total, payment method details (Cash tendered & change / QRIS status / Debtor note & balance).
- * - Store footer greeting.
- * - Prominent "SALINAN / REPRINT" banner when [ReceiptUiModel.isReprint] is true.
- *
- * Actions:
- * - "Cetak / PDF" via Android [android.print.PrintManager].
- * - "Bagikan" via Android [android.content.Intent.ACTION_SEND].
- * - "Selesai" closing the dialog.
- */
 @Composable
 fun ReceiptDialog(
     receipt: ReceiptUiModel,
@@ -92,7 +78,6 @@ fun ReceiptDialog(
                     .fillMaxWidth()
                     .padding(20.dp)
             ) {
-                // Thermal Paper Container
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -115,7 +100,6 @@ fun ReceiptDialog(
                             .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Reprint Banner if applicable
                         if (receipt.isReprint) {
                             Box(
                                 modifier = Modifier
@@ -135,7 +119,6 @@ fun ReceiptDialog(
                             }
                         }
 
-                        // Store Identity
                         Text(
                             text = receipt.storeName.uppercase(),
                             style = MaterialTheme.typography.titleMedium,
@@ -158,7 +141,6 @@ fun ReceiptDialog(
                         DashedDivider()
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Transaction Metadata
                         ReceiptMetaRow(
                             label = "No. Nota",
                             value = receipt.receiptNo,
@@ -177,7 +159,6 @@ fun ReceiptDialog(
                         DashedDivider()
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Itemized Lines
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(6.dp)
@@ -216,7 +197,6 @@ fun ReceiptDialog(
                         DashedDivider()
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Total Calculation
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -238,7 +218,6 @@ fun ReceiptDialog(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // Payment Details
                         when (receipt.paymentMethod) {
                             PaymentMethod.CASH -> {
                                 ReceiptMetaRow("Metode Bayar", "Tunai (Cash)")
@@ -268,7 +247,6 @@ fun ReceiptDialog(
                         DashedDivider()
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Store Footer
                         val footerMsg = receipt.footer?.ifBlank { null }
                             ?: stringResource(R.string.receipt_footer_default)
                         Text(
@@ -289,9 +267,8 @@ fun ReceiptDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Bottom Action Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -299,6 +276,7 @@ fun ReceiptDialog(
                 ) {
                     OutlinedButton(
                         onClick = { ReceiptPrinter.shareReceipt(context, receipt) },
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("receipt_btn_share")
@@ -306,14 +284,19 @@ fun ReceiptDialog(
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.receipt_btn_share))
+                        Text(
+                            text = stringResource(R.string.receipt_btn_share),
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
 
                     Button(
                         onClick = { ReceiptPrinter.printReceipt(context, receipt) },
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
                         modifier = Modifier
                             .weight(1f)
                             .testTag("receipt_btn_print"),
@@ -324,10 +307,14 @@ fun ReceiptDialog(
                         Icon(
                             imageVector = Icons.Default.Print,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.receipt_btn_print))
+                        Text(
+                            text = stringResource(R.string.receipt_btn_print),
+                            maxLines = 1,
+                            softWrap = false
+                        )
                     }
                 }
 

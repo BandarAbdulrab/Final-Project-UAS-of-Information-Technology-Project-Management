@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -68,18 +67,6 @@ import com.byteall.kharismart.data.local.PaymentMethod
 import com.byteall.kharismart.util.format.toRupiah
 import com.byteall.kharismart.util.image.ImageStorageManager
 
-/**
- * Atomic 3-Way Checkout Dialog (SRS-F07, F08, BR-03, BR-04, BR-04b, BR-05).
- *
- * Supported Payment Methods:
- * 1. [PaymentMethod.CASH]: Input tendered amount, live change calculation, quick cash chips (+10k, +20k, +50k, exact).
- * 2. [PaymentMethod.QRIS]: Displays store QRIS bitmap image, bank and owner name, and mandatory funds received confirmation checkbox.
- * 3. [PaymentMethod.CREDIT]: Mandatory customer debtor name (with autocomplete suggestions), summary display, zero payment.
- *
- * Safety:
- * - Double-click protection via submission state.
- * - Confirmation alert dialog before final processing.
- */
 @Composable
 fun CheckoutDialog(
     totalAmount: Long,
@@ -91,14 +78,13 @@ fun CheckoutDialog(
     onDismissRequest: () -> Unit,
     onConfirmCheckout: (method: String, paidAmount: Long, customerName: String?, note: String?) -> Unit
 ) {
-    var selectedTabIndex by remember { mutableIntStateOf(0) } // 0: Cash, 1: QRIS, 2: Credit
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
     var paidInputText by remember { mutableStateOf("") }
     var qrisConfirmed by remember { mutableStateOf(false) }
     var debtorNameInput by remember { mutableStateOf("") }
     var transactionNoteInput by remember { mutableStateOf("") }
     var showConfirmationModal by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
     val parsedPaidAmount = paidInputText.filter { it.isDigit() }.toLongOrNull() ?: 0L
 
     val isCashValid = selectedTabIndex == 0 && parsedPaidAmount >= totalAmount
@@ -136,50 +122,43 @@ fun CheckoutDialog(
             modifier = Modifier
                 .widthIn(max = 620.dp)
                 .fillMaxWidth(0.94f)
-                .padding(16.dp)
+                .padding(8.dp)
                 .testTag("checkout_dialog"),
-            shape = RoundedCornerShape(24.dp),
+            shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp)
-                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
             ) {
-                // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Text(
                             text = stringResource(R.string.checkout_dialog_title),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(verticalAlignment = Alignment.Bottom) {
-                            Text(
-                                text = stringResource(R.string.checkout_total_label),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = totalAmount.toRupiah(),
-                                style = MaterialTheme.typography.headlineSmall,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
+                        Text(
+                            text = totalAmount.toRupiah(),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
 
                     IconButton(
                         onClick = onDismissRequest,
-                        enabled = !isSubmitting
+                        enabled = !isSubmitting,
+                        modifier = Modifier.size(32.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -188,83 +167,82 @@ fun CheckoutDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
-                // Payment Method Tabs
                 TabRow(
                     selectedTabIndex = selectedTabIndex,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(10.dp))
                 ) {
                     Tab(
                         selected = selectedTabIndex == 0,
                         onClick = { selectedTabIndex = 0 },
                         text = { Text(stringResource(R.string.checkout_tab_cash)) },
-                        icon = { Icon(Icons.Default.Payments, contentDescription = null) },
                         modifier = Modifier.testTag("checkout_tab_cash")
                     )
                     Tab(
                         selected = selectedTabIndex == 1,
                         onClick = { selectedTabIndex = 1 },
                         text = { Text(stringResource(R.string.checkout_tab_qris)) },
-                        icon = { Icon(Icons.Default.QrCode, contentDescription = null) },
                         modifier = Modifier.testTag("checkout_tab_qris")
                     )
                     Tab(
                         selected = selectedTabIndex == 2,
                         onClick = { selectedTabIndex = 2 },
                         text = { Text(stringResource(R.string.checkout_tab_credit)) },
-                        icon = { Icon(Icons.Default.Person, contentDescription = null) },
                         modifier = Modifier.testTag("checkout_tab_credit")
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // Content based on selected tab
-                when (selectedTabIndex) {
-                    0 -> CashPaymentContent(
-                        totalAmount = totalAmount,
-                        paidInputText = paidInputText,
-                        onPaidInputChange = { paidInputText = it },
-                        parsedPaidAmount = parsedPaidAmount
-                    )
-                    1 -> QrisPaymentContent(
-                        totalAmount = totalAmount,
-                        qrisBank = qrisBank,
-                        qrisOwnerName = qrisOwnerName,
-                        qrisImageFilename = qrisImageFilename,
-                        qrisConfirmed = qrisConfirmed,
-                        onQrisConfirmedChange = { qrisConfirmed = it }
-                    )
-                    2 -> CreditPaymentContent(
-                        totalAmount = totalAmount,
-                        debtorNameInput = debtorNameInput,
-                        onDebtorNameChange = { debtorNameInput = it },
-                        debtorSuggestions = debtorSuggestions
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    when (selectedTabIndex) {
+                        0 -> CashPaymentContent(
+                            totalAmount = totalAmount,
+                            paidInputText = paidInputText,
+                            onPaidInputChange = { paidInputText = it },
+                            parsedPaidAmount = parsedPaidAmount
+                        )
+                        1 -> QrisPaymentContent(
+                            totalAmount = totalAmount,
+                            qrisBank = qrisBank,
+                            qrisOwnerName = qrisOwnerName,
+                            qrisImageFilename = qrisImageFilename,
+                            qrisConfirmed = qrisConfirmed,
+                            onQrisConfirmedChange = { qrisConfirmed = it }
+                        )
+                        2 -> CreditPaymentContent(
+                            totalAmount = totalAmount,
+                            debtorNameInput = debtorNameInput,
+                            onDebtorNameChange = { debtorNameInput = it },
+                            debtorSuggestions = debtorSuggestions
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedTextField(
+                        value = transactionNoteInput,
+                        onValueChange = { transactionNoteInput = it },
+                        label = { Text(stringResource(R.string.checkout_note_label)) },
+                        placeholder = { Text(stringResource(R.string.checkout_note_hint)) },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("checkout_input_note")
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Optional Note
-                OutlinedTextField(
-                    value = transactionNoteInput,
-                    onValueChange = { transactionNoteInput = it },
-                    label = { Text(stringResource(R.string.checkout_note_label)) },
-                    placeholder = { Text(stringResource(R.string.checkout_note_hint)) },
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("checkout_input_note")
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider()
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // Actions
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End,
@@ -302,7 +280,6 @@ fun CheckoutDialog(
         }
     }
 
-    // Confirmation Modal before saving
     if (showConfirmationModal) {
         AlertDialog(
             onDismissRequest = { if (!isSubmitting) showConfirmationModal = false },
@@ -351,9 +328,6 @@ fun CheckoutDialog(
     }
 }
 
-/**
- * Tab 1: Tunai / Cash Payment Content.
- */
 @Composable
 private fun CashPaymentContent(
     totalAmount: Long,
@@ -380,23 +354,86 @@ private fun CashPaymentContent(
                 .testTag("checkout_input_cash_paid")
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        // Placed directly below the input so it is immediately visible when typing
+        if (paidInputText.isNotBlank()) {
+            Spacer(modifier = Modifier.height(6.dp))
+            if (isSufficient) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("checkout_change_amount"),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.checkout_cash_change_label),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Text(
+                            text = changeDue.toRupiah(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            } else {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    ),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.checkout_cash_insufficient_label),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                        Text(
+                            text = (totalAmount - parsedPaidAmount).toRupiah(),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            }
+        }
 
-        // Quick Cash Chips
+        Spacer(modifier = Modifier.height(6.dp))
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // "Uang Pas" chip
             FilterChip(
                 selected = parsedPaidAmount == totalAmount,
                 onClick = { onPaidInputChange(totalAmount.toString()) },
                 label = { Text(stringResource(R.string.checkout_cash_exact)) }
             )
 
-            // Smart rounded denominations
             val quickAmounts = listOf(
                 calculateNextMultiple(totalAmount, 10_000L),
                 calculateNextMultiple(totalAmount, 20_000L),
@@ -412,7 +449,6 @@ private fun CashPaymentContent(
                 )
             }
 
-            // Quick additive chips
             FilterChip(
                 selected = false,
                 onClick = {
@@ -438,79 +474,9 @@ private fun CashPaymentContent(
                 label = { Text("+50rb") }
             )
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Change or Insufficient Indicator
-        if (paidInputText.isNotBlank()) {
-            if (isSufficient) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("checkout_change_amount"),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.checkout_cash_change_label),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                        Text(
-                            text = changeDue.toRupiah(),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            } else {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(R.string.checkout_cash_insufficient_label),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onErrorContainer
-                        )
-                        Text(
-                            text = (totalAmount - parsedPaidAmount).toRupiah(),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                }
-            }
-        }
     }
 }
 
-/**
- * Tab 2: QRIS Payment Content.
- */
 @Composable
 private fun QrisPaymentContent(
     totalAmount: Long,
@@ -533,15 +499,42 @@ private fun QrisPaymentContent(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = stringResource(R.string.checkout_qris_instruction),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        // Confirmation Checkbox placed at the top of the QRIS section so it is always visible
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onQrisConfirmedChange(!qrisConfirmed) },
+            colors = CardDefaults.cardColors(
+                containerColor = if (qrisConfirmed) {
+                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                }
+            ),
+            shape = RoundedCornerShape(10.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = qrisConfirmed,
+                    onCheckedChange = onQrisConfirmedChange,
+                    modifier = Modifier.testTag("checkout_qris_checkbox")
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.checkout_qris_confirm_checkbox),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Store / Bank details
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -564,17 +557,16 @@ private fun QrisPaymentContent(
             )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-        // QR Code Image or Placeholder
         Box(
             modifier = Modifier
-                .size(200.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .size(120.dp)
+                .clip(RoundedCornerShape(12.dp))
                 .border(
-                    width = 2.dp,
+                    width = 1.dp,
                     color = MaterialTheme.colorScheme.outlineVariant,
-                    shape = RoundedCornerShape(16.dp)
+                    shape = RoundedCornerShape(12.dp)
                 )
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
@@ -586,71 +578,32 @@ private fun QrisPaymentContent(
                         .crossfade(true)
                         .build(),
                     contentDescription = "QRIS Toko Kharisma",
-                    modifier = Modifier.size(190.dp),
+                    modifier = Modifier.size(112.dp),
                     contentScale = ContentScale.Fit
                 )
             } else {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.padding(6.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.QrCode,
                         contentDescription = null,
-                        modifier = Modifier.size(72.dp),
+                        modifier = Modifier.size(36.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = stringResource(R.string.checkout_qris_no_image),
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Mandatory Confirmation Checkbox (BR-04b)
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onQrisConfirmedChange(!qrisConfirmed) },
-            colors = CardDefaults.cardColors(
-                containerColor = if (qrisConfirmed) {
-                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant
-                }
-            ),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Checkbox(
-                    checked = qrisConfirmed,
-                    onCheckedChange = onQrisConfirmedChange,
-                    modifier = Modifier.testTag("checkout_qris_checkbox")
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.checkout_qris_confirm_checkbox),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
     }
 }
 
-/**
- * Tab 3: Utang / Credit Payment Content.
- */
 @Composable
 private fun CreditPaymentContent(
     totalAmount: Long,
@@ -670,13 +623,12 @@ private fun CreditPaymentContent(
                 .testTag("checkout_input_customer_name")
         )
 
-        // Customer Suggestions Chips
         val filteredSuggestions = debtorSuggestions.filter {
             debtorNameInput.isBlank() || it.contains(debtorNameInput, ignoreCase = true)
         }.take(5)
 
         if (filteredSuggestions.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -693,21 +645,20 @@ private fun CreditPaymentContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Credit summary
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(10.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(10.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -737,13 +688,13 @@ private fun CreditPaymentContent(
                             R.string.checkout_credit_remaining_info,
                             ""
                         ),
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     Text(
                         text = totalAmount.toRupiah(),
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
@@ -753,9 +704,6 @@ private fun CreditPaymentContent(
     }
 }
 
-/**
- * Calculates the next multiple of [step] that is strictly >= [amount].
- */
 private fun calculateNextMultiple(amount: Long, step: Long): Long {
     if (amount <= 0L) return step
     val remainder = amount % step
