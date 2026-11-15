@@ -58,6 +58,7 @@ import com.byteall.kharismart.session.AppSession
 import com.byteall.kharismart.session.SessionUser
 import com.byteall.kharismart.session.UserRole
 import com.byteall.kharismart.ui.common.PlaceholderScreen
+import com.byteall.kharismart.ui.inventory.ProductListScreen
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -315,11 +316,16 @@ fun RenderScreenContent(route: String) {
             subtitle = stringResource(R.string.access_denied_message)
         )
     } else {
-        val currentDest = APP_DESTINATIONS.find { it.route == route }
-        val title = if (currentDest != null) stringResource(currentDest.labelRes) else route
-        PlaceholderScreen(
-            title = title,
-            subtitle = stringResource(R.string.placeholder_under_construction)
-        )
+        when (route) {
+            Routes.INVENTORY -> ProductListScreen()
+            else -> {
+                val currentDest = APP_DESTINATIONS.find { it.route == route }
+                val title = if (currentDest != null) stringResource(currentDest.labelRes) else route
+                PlaceholderScreen(
+                    title = title,
+                    subtitle = stringResource(R.string.placeholder_under_construction)
+                )
+            }
+        }
     }
 }
