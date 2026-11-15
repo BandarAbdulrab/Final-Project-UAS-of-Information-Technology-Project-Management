@@ -101,13 +101,21 @@ import kotlinx.coroutines.launch
 @Composable
 fun PosScreen(
     viewModel: PosViewModel = appViewModel { container ->
-        PosViewModel(inventoryRepository = container.inventoryRepository)
+        PosViewModel(
+            inventoryRepository = container.inventoryRepository,
+            saleRepository = container.saleRepository,
+            debtRepository = container.debtRepository,
+            settingsRepository = container.settingsRepository
+        )
     },
     onProceedToCheckout: (() -> Unit)? = null
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val storeSettings by viewModel.storeSettings.collectAsStateWithLifecycle()
+    val debtorSuggestions by viewModel.debtorSuggestions.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -115,6 +123,19 @@ fun PosScreen(
     val barcodeFocusRequester = remember { FocusRequester() }
     var barcodeInputText by remember { mutableStateOf("") }
     var showClearCartConfirmation by remember { mutableStateOf(false) }
+    var showCheckoutDialog by remember { mutableStateOf(false) }
+
+    val handleCheckoutClick: () -> Unit = {
+        if (uiState.cartItems.isEmpty()) {
+            scope.launch {
+                snackbarHostState.showSnackbar(context.getString(R.string.checkout_err_empty_cart))
+            }
+        } else if (onProceedToCheckout != null) {
+            onProceedToCheckout()
+        } else {
+            showCheckoutDialog = true
+        }
+    }
 
     // Request auto-focus on barcode listener when screen opens
     LaunchedEffect(Unit) {
@@ -198,15 +219,7 @@ fun PosScreen(
                             barcodeFocusRequester.requestFocus()
                         },
                         onClearCartClick = { showClearCartConfirmation = true },
-                        onCheckoutClick = {
-                            if (onProceedToCheckout != null) {
-                                onProceedToCheckout()
-                            } else {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("Checkout akan diaktifkan pada Day 9 (SRS-F07)")
-                                }
-                            }
-                        }
+                        onCheckoutClick = handleCheckoutClick
                     )
                 }
             }
@@ -255,19 +268,39 @@ fun PosScreen(
                         onUpdateQuantity = { id, delta -> viewModel.updateQuantity(id, delta) },
                         onRemoveItem = { id -> viewModel.removeItem(id) },
                         onClearCartClick = { showClearCartConfirmation = true },
-                        onCheckoutClick = {
-                            if (onProceedToCheckout != null) {
-                                onProceedToCheckout()
-                            } else {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar("Checkout akan diaktifkan pada Day 9 (SRS-F07)")
-                                }
-                            }
-                        }
+                        onCheckoutClick = handleCheckoutClick
                     )
                 }
             }
         }
+    }
+
+    // Day 9: Atomic 3-Way Checkout Dialog (SRS-F07, F08)
+    if (showCheckoutDialog) {
+        CheckoutDialog(
+            totalAmount = uiState.totalAmount,
+            qrisBank = storeSettings?.qrisBank,
+            qrisOwnerName = storeSettings?.qrisOwnerName,
+            qrisImageFilename = storeSettings?.qrisImage,
+            debtorSuggestions = debtorSuggestions,
+            isSubmitting = uiState.isSubmitting,
+            onDismissRequest = {
+                showCheckoutDialog = false
+                barcodeFocusRequester.requestFocus()
+            },
+            onConfirmCheckout = { method, paidAmount, customerName, note ->
+                viewModel.completeCheckout(
+                    method = method,
+                    paidAmount = paidAmount,
+                    customerName = customerName,
+                    note = note,
+                    onSuccess = {
+                        showCheckoutDialog = false
+                        barcodeFocusRequester.requestFocus()
+                    }
+                )
+            }
+        )
     }
 
     // Confirmation dialog before clearing cart

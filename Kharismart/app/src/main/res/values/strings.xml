@@ -122,4 +122,35 @@
     <string name="pos_err_out_of_stock">Stok \"%s\" habis dan tidak dapat ditambahkan.</string>
     <string name="pos_err_stock_exceeded">Stok \"%1$s\" tidak mencukupi (tersedia: %2$d).</string>
     <string name="pos_checkout_placeholder_notice">Fitur pembayaran (Cash, QRIS, Utang) akan diaktifkan pada Day 9.</string>
+
+    <!-- Day 9: Atomic 3-Way Checkout & Credit Sale Logic -->
+    <string name="checkout_dialog_title">Pembayaran Transaksi</string>
+    <string name="checkout_tab_cash">Tunai (Cash)</string>
+    <string name="checkout_tab_qris">QRIS</string>
+    <string name="checkout_tab_credit">Utang (Kredit)</string>
+    <string name="checkout_total_label">Total Belanja</string>
+    <string name="checkout_cash_paid_label">Uang Diterima (Rp)</string>
+    <string name="checkout_cash_change_label">Uang Kembalian</string>
+    <string name="checkout_cash_insufficient_label">Uang Kurang</string>
+    <string name="checkout_cash_exact">Uang Pas</string>
+    <string name="checkout_qris_bank_label">Bank / Penyedia: %s</string>
+    <string name="checkout_qris_owner_label">Atas Nama: %s</string>
+    <string name="checkout_qris_instruction">Scan kode QRIS merchant di bawah melalui aplikasi m-banking atau e-wallet:</string>
+    <string name="checkout_qris_confirm_checkbox">Dana telah masuk (dikonfirmasi via m-banking)</string>
+    <string name="checkout_qris_no_image">Gambar QRIS belum diatur di menu Pengaturan Toko.</string>
+    <string name="checkout_credit_customer_label">Nama Pelanggan (Wajib)</string>
+    <string name="checkout_credit_customer_hint">Pilih atau ketik nama pelanggan…</string>
+    <string name="checkout_credit_paid_info">Dibayar Sekarang: Rp0</string>
+    <string name="checkout_credit_remaining_info">Sisa Utang: %s</string>
+    <string name="checkout_note_label">Catatan Transaksi (Opsional)</string>
+    <string name="checkout_note_hint">Contoh: Beli keperluan warung makan samping</string>
+    <string name="checkout_btn_confirm">Proses Pembayaran</string>
+    <string name="checkout_btn_processing">Memproses…</string>
+    <string name="checkout_confirm_dialog_title">Konfirmasi Pembayaran</string>
+    <string name="checkout_confirm_dialog_message">Proses pembayaran sebesar %1$s dengan metode %2$s?</string>
+    <string name="checkout_success_message">Transaksi berhasil disimpan! No: %s</string>
+    <string name="checkout_err_empty_cart">Keranjang belanja kosong</string>
+    <string name="checkout_err_cash_less">Nominal pembayaran tunai kurang dari total tagihan</string>
+    <string name="checkout_err_qris_not_confirmed">Wajib mencentang konfirmasi penerimaan dana QRIS</string>
+    <string name="checkout_err_customer_required">Nama pelanggan wajib diisi untuk transaksi utang/kredit</string>
 </resources>

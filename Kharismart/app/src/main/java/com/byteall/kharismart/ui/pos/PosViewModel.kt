@@ -4,7 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.byteall.kharismart.data.local.entity.CategoryEntity
 import com.byteall.kharismart.data.local.entity.ProductEntity
+import com.byteall.kharismart.data.local.entity.SettingsEntity
+import com.byteall.kharismart.data.local.entity.TransactionEntity
+import com.byteall.kharismart.data.repository.CartLine
+import com.byteall.kharismart.data.repository.DebtRepository
 import com.byteall.kharismart.data.repository.InventoryRepository
+import com.byteall.kharismart.data.repository.SaleRepository
+import com.byteall.kharismart.data.repository.SettingsRepository
+import com.byteall.kharismart.session.AppSession
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -43,20 +50,25 @@ data class PosUiState(
     val totalItemCount: Int = 0,
     val userMessage: String? = null,
     val errorMessage: String? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isSubmitting: Boolean = false
 )
 
 /**
- * ViewModel for the POS and Cart Screen (SRS-F05, F06, BR-01, BR-02).
+ * ViewModel for the POS and Cart Screen (SRS-F05, F06, F07, F08, BR-01, BR-02, BR-03, BR-04, BR-05).
  *
  * Responsibilities:
  * - Manages active cart items and real-time total calculations in IDR.
  * - Intercepts hardware barcode scanner lookups via [InventoryRepository.findByBarcode].
  * - Validates stock constraints so that cart quantities never exceed available inventory.
  * - Provides catalog filtering by category and search query.
+ * - Executes atomic checkout via [SaleRepository.completeCheckout].
  */
 class PosViewModel(
-    private val inventoryRepository: InventoryRepository
+    private val inventoryRepository: InventoryRepository,
+    private val saleRepository: SaleRepository? = null,
+    private val debtRepository: DebtRepository? = null,
+    private val settingsRepository: SettingsRepository? = null
 ) : ViewModel() {
 
     private val _cartItems = MutableStateFlow<List<CartItemUiModel>>(emptyList())
@@ -70,6 +82,7 @@ class PosViewModel(
 
     private val _userMessage = MutableStateFlow<String?>(null)
     private val _errorMessage = MutableStateFlow<String?>(null)
+    private val _isSubmitting = MutableStateFlow(false)
 
     val totalAmount: StateFlow<Long> = _cartItems
         .map { items -> items.sumOf { it.subtotal } }
@@ -78,6 +91,20 @@ class PosViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = 0L
         )
+
+    val debtorSuggestions: StateFlow<List<String>> = debtRepository?.observeCustomerNames()
+        ?.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        ) ?: MutableStateFlow(emptyList())
+
+    val storeSettings: StateFlow<SettingsEntity?> = settingsRepository?.observeSettings()
+        ?.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        ) ?: MutableStateFlow(null)
 
     private data class CatalogData(
         val products: List<ProductEntity>,
@@ -108,16 +135,17 @@ class PosViewModel(
 
     private val feedbackFlow = combine(
         _userMessage,
-        _errorMessage
-    ) { userMsg, errorMsg ->
-        userMsg to errorMsg
+        _errorMessage,
+        _isSubmitting
+    ) { userMsg, errorMsg, submitting ->
+        Triple(userMsg, errorMsg, submitting)
     }
 
     val uiState: StateFlow<PosUiState> = combine(
         catalogFlow,
         _cartItems,
         feedbackFlow
-    ) { catalog, cart, (userMsg, errorMsg) ->
+    ) { catalog, cart, (userMsg, errorMsg, submitting) ->
         val total = cart.sumOf { it.subtotal }
         val count = cart.sumOf { it.quantity }
 
@@ -130,7 +158,8 @@ class PosViewModel(
             totalAmount = total,
             totalItemCount = count,
             userMessage = userMsg,
-            errorMessage = errorMsg
+            errorMessage = errorMsg,
+            isSubmitting = submitting
         )
     }.stateIn(
         scope = viewModelScope,
@@ -248,5 +277,53 @@ class PosViewModel(
      */
     fun clearCart() {
         _cartItems.value = emptyList()
+    }
+
+    /**
+     * Executes atomic checkout for the current cart lines (SRS-F07, F08).
+     */
+    fun completeCheckout(
+        method: String,
+        paidAmount: Long,
+        customerName: String?,
+        note: String?,
+        userId: Long? = null,
+        onSuccess: ((TransactionEntity) -> Unit)? = null
+    ) {
+        val cart = _cartItems.value
+        if (cart.isEmpty()) {
+            _errorMessage.value = "Keranjang belanja kosong"
+            return
+        }
+
+        val repo = saleRepository
+        if (repo == null) {
+            _errorMessage.value = "SaleRepository belum tersedia"
+            return
+        }
+
+        val effectiveUserId = userId ?: AppSession.currentUser.value?.userId ?: 1L
+        val lines = cart.map { CartLine(productId = it.product.productId, quantity = it.quantity) }
+
+        _isSubmitting.value = true
+        viewModelScope.launch {
+            val result = repo.completeCheckout(
+                lines = lines,
+                method = method,
+                paidAmount = paidAmount,
+                customerName = customerName,
+                note = note,
+                userId = effectiveUserId
+            )
+
+            _isSubmitting.value = false
+            result.onSuccess { transaction ->
+                clearCart()
+                _userMessage.value = "Transaksi berhasil disimpan! No: ${transaction.receiptNo}"
+                onSuccess?.invoke(transaction)
+            }.onFailure { error ->
+                _errorMessage.value = error.message ?: "Gagal memproses transaksi"
+            }
+        }
     }
 }
