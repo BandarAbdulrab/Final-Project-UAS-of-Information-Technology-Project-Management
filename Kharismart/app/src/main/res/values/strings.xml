@@ -153,4 +153,43 @@
     <string name="checkout_err_cash_less">Nominal pembayaran tunai kurang dari total tagihan</string>
     <string name="checkout_err_qris_not_confirmed">Wajib mencentang konfirmasi penerimaan dana QRIS</string>
     <string name="checkout_err_customer_required">Nama pelanggan wajib diisi untuk transaksi utang/kredit</string>
+
+    <!-- Day 10: Thermal Receipt, Printing Adapter & Transaction History -->
+    <string name="receipt_dialog_title">Struk Transaksi</string>
+    <string name="receipt_badge_reprint">SALINAN / REPRINT</string>
+    <string name="receipt_store_fallback">Toko Kharisma</string>
+    <string name="receipt_no">No: %s</string>
+    <string name="receipt_date">Waktu: %s</string>
+    <string name="receipt_cashier">Kasir: %s</string>
+    <string name="receipt_item_line">%1$d x %2$s</string>
+    <string name="receipt_total_label">TOTAL BELANJA</string>
+    <string name="receipt_method_cash">Tunai (Cash)</string>
+    <string name="receipt_method_qris">QRIS</string>
+    <string name="receipt_method_credit">Utang (Kredit)</string>
+    <string name="receipt_cash_paid">Uang Diterima: %s</string>
+    <string name="receipt_change_due">Uang Kembalian: %s</string>
+    <string name="receipt_debtor_name">Nama Pelanggan: %s</string>
+    <string name="receipt_remaining_debt">Sisa Utang: %s</string>
+    <string name="receipt_footer_default">Terima Kasih Atas Kunjungan Anda!</string>
+    <string name="receipt_btn_print">Cetak / PDF</string>
+    <string name="receipt_btn_share">Bagikan</string>
+    <string name="receipt_btn_done">Selesai</string>
+    <string name="receipt_share_chooser_title">Bagikan Struk Belanja</string>
+    <string name="history_title">Riwayat Transaksi</string>
+    <string name="history_search_hint">Cari nomor nota atau nama kasir…</string>
+    <string name="history_period_today">Hari Ini</string>
+    <string name="history_period_yesterday">Kemarin</string>
+    <string name="history_period_this_week">Minggu Ini</string>
+    <string name="history_period_this_month">Bulan Ini</string>
+    <string name="history_badge_cashier_locked">Khusus Hari Ini</string>
+    <string name="history_summary_sales_count">%d Transaksi</string>
+    <string name="history_summary_revenue">Total Omzet: %s</string>
+    <string name="history_summary_profit">Laba Kotor: %s</string>
+    <string name="history_empty_title">Belum Ada Transaksi</string>
+    <string name="history_empty_subtitle">Tidak ditemukan transaksi penjualan pada periode yang dipilih.</string>
+    <string name="history_btn_reprint">Cetak Ulang Struk</string>
+    <string name="history_items_header">Rincian Barang Belanja:</string>
+    <string name="history_method_cash">Tunai</string>
+    <string name="history_method_qris">QRIS</string>
+    <string name="history_method_credit">Utang</string>
 </resources>

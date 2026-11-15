@@ -12,6 +12,7 @@ import com.byteall.kharismart.data.repository.InventoryRepository
 import com.byteall.kharismart.data.repository.SaleRepository
 import com.byteall.kharismart.data.repository.SettingsRepository
 import com.byteall.kharismart.session.AppSession
+import com.byteall.kharismart.util.printer.ReceiptUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -83,6 +84,8 @@ class PosViewModel(
     private val _userMessage = MutableStateFlow<String?>(null)
     private val _errorMessage = MutableStateFlow<String?>(null)
     private val _isSubmitting = MutableStateFlow(false)
+    private val _completedReceipt = MutableStateFlow<ReceiptUiModel?>(null)
+    val completedReceipt: StateFlow<ReceiptUiModel?> = _completedReceipt.asStateFlow()
 
     val totalAmount: StateFlow<Long> = _cartItems
         .map { items -> items.sumOf { it.subtotal } }
@@ -320,10 +323,20 @@ class PosViewModel(
             result.onSuccess { transaction ->
                 clearCart()
                 _userMessage.value = "Transaksi berhasil disimpan! No: ${transaction.receiptNo}"
+                viewModelScope.launch {
+                    val receiptData = repo.getReceiptData(transaction.transactionId)
+                    if (receiptData != null) {
+                        _completedReceipt.value = ReceiptUiModel.fromReceiptData(receiptData, isReprint = false)
+                    }
+                }
                 onSuccess?.invoke(transaction)
             }.onFailure { error ->
                 _errorMessage.value = error.message ?: "Gagal memproses transaksi"
             }
         }
+    }
+
+    fun dismissCompletedReceipt() {
+        _completedReceipt.value = null
     }
 }

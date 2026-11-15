@@ -58,6 +58,7 @@ import com.byteall.kharismart.session.AppSession
 import com.byteall.kharismart.session.SessionUser
 import com.byteall.kharismart.session.UserRole
 import com.byteall.kharismart.ui.common.PlaceholderScreen
+import com.byteall.kharismart.ui.history.HistoryScreen
 import com.byteall.kharismart.ui.inventory.ProductListScreen
 import com.byteall.kharismart.ui.pos.PosScreen
 import kotlinx.coroutines.flow.SharingStarted
@@ -320,6 +321,7 @@ fun RenderScreenContent(route: String) {
         when (route) {
             Routes.POS -> PosScreen()
             Routes.INVENTORY -> ProductListScreen()
+            Routes.HISTORY -> HistoryScreen()
             else -> {
                 val currentDest = APP_DESTINATIONS.find { it.route == route }
                 val title = if (currentDest != null) stringResource(currentDest.labelRes) else route

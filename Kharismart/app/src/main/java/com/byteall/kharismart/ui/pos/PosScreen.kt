@@ -82,6 +82,7 @@ import coil.request.ImageRequest
 import com.byteall.kharismart.R
 import com.byteall.kharismart.data.local.entity.ProductEntity
 import com.byteall.kharismart.di.appViewModel
+import com.byteall.kharismart.ui.receipt.ReceiptDialog
 import com.byteall.kharismart.util.barcode.interceptBarcodeKeyEvents
 import com.byteall.kharismart.util.format.toRupiah
 import com.byteall.kharismart.util.image.ImageStorageManager
@@ -113,6 +114,7 @@ fun PosScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val storeSettings by viewModel.storeSettings.collectAsStateWithLifecycle()
     val debtorSuggestions by viewModel.debtorSuggestions.collectAsStateWithLifecycle()
+    val completedReceipt by viewModel.completedReceipt.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
@@ -299,6 +301,17 @@ fun PosScreen(
                         barcodeFocusRequester.requestFocus()
                     }
                 )
+            }
+        )
+    }
+
+    // Day 10: Thermal Receipt Dialog on Checkout Completion (SRS-F09)
+    completedReceipt?.let { receipt ->
+        ReceiptDialog(
+            receipt = receipt,
+            onDismiss = {
+                viewModel.dismissCompletedReceipt()
+                barcodeFocusRequester.requestFocus()
             }
         )
     }
