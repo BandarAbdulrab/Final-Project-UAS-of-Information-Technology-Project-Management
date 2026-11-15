@@ -98,4 +98,28 @@
     <string name="err_qty_invalid">Jumlah restock harus lebih besar dari 0</string>
     <string name="err_reason_required">Alasan penyesuaian stok fisik wajib diisi</string>
     <string name="err_category_required">Pilih kategori untuk produk</string>
+
+    <!-- Day 8: POS Screen & Hardware Barcode Handling -->
+    <string name="pos_title">Kasir (POS)</string>
+    <string name="pos_tab_all">Semua</string>
+    <string name="pos_search_hint">Cari produk di katalog…</string>
+    <string name="pos_barcode_input_label">Scan Barcode (Hardware / Manual)</string>
+    <string name="pos_barcode_input_hint">Scan barcode atau ketik lalu Enter…</string>
+    <string name="pos_cart_title">Keranjang Belanja</string>
+    <string name="pos_cart_items_count">%d Item</string>
+    <string name="pos_cart_empty_title">Keranjang Masih Kosong</string>
+    <string name="pos_cart_empty_subtitle">Scan barcode barang dengan scanner atau pilih produk dari katalog di sebelah kiri.</string>
+    <string name="pos_cart_clear">Kosongkan</string>
+    <string name="pos_cart_clear_confirm_title">Kosongkan Keranjang?</string>
+    <string name="pos_cart_clear_confirm_desc">Semua barang yang sudah dimasukkan ke keranjang akan dihapus.</string>
+    <string name="pos_cart_total">Total Tagihan</string>
+    <string name="pos_btn_checkout">Bayar / Checkout</string>
+    <string name="pos_btn_checkout_with_total">Bayar • %s</string>
+    <string name="pos_item_stock_info">Sisa: %d</string>
+    <string name="pos_catalog_empty">Tidak ada produk yang sesuai.</string>
+    <string name="pos_catalog_out_of_stock">HABIS</string>
+    <string name="pos_err_barcode_not_found">Produk dengan barcode \"%s\" tidak ditemukan di katalog.</string>
+    <string name="pos_err_out_of_stock">Stok \"%s\" habis dan tidak dapat ditambahkan.</string>
+    <string name="pos_err_stock_exceeded">Stok \"%1$s\" tidak mencukupi (tersedia: %2$d).</string>
+    <string name="pos_checkout_placeholder_notice">Fitur pembayaran (Cash, QRIS, Utang) akan diaktifkan pada Day 9.</string>
 </resources>
