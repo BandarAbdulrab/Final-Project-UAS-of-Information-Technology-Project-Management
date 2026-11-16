@@ -48,6 +48,7 @@ import com.byteall.kharismart.R
 import com.byteall.kharismart.session.AppSession
 import com.byteall.kharismart.session.UserRole
 import com.byteall.kharismart.ui.analytics.AnalyticsScreen
+import com.byteall.kharismart.ui.backup.BackupScreen
 import com.byteall.kharismart.ui.common.PlaceholderScreen
 import com.byteall.kharismart.ui.debt.DebtListScreen
 import com.byteall.kharismart.ui.finance.ManualFinanceScreen
@@ -262,6 +263,7 @@ fun RenderScreenContent(route: String) {
             Routes.ANALYTICS -> AnalyticsScreen()
             Routes.USERS -> UserManagementScreen()
             Routes.SETTINGS -> SettingsScreen()
+            Routes.BACKUP -> BackupScreen()
             else -> {
                 val currentDest = APP_DESTINATIONS.find { it.route == route }
                 val title = if (currentDest != null) stringResource(currentDest.labelRes) else route

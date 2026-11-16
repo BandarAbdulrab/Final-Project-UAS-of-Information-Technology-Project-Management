@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="backup_screen_title">Cadangan &amp; Pemulihan Data</string>
+    <string name="backup_screen_subtitle">Lindungi seluruh data transaksi, katalog, piutang, dan foto produk dalam satu arsip ZIP lokal.</string>
+
+    <string name="backup_status_card_title">Status Cadangan Terakhir</string>
+    <string name="backup_last_time_label">Waktu Cadangan Terakhir:</string>
+    <string name="backup_never_backed_up">Belum pernah dicadangkan</string>
+    <string name="backup_last_folder_label">Lokasi / URI Terakhir:</string>
+    <string name="backup_no_folder_recorded">Belum ada lokasi tersimpan</string>
+
+    <string name="backup_create_card_title">Buat Cadangan Baru (Backup)</string>
+    <string name="backup_create_card_desc">Menyimpan database SQLite (WAL checkpoint), seluruh foto produk, dan manifest.json ke penyimpanan tablet atau flashdisk USB.</string>
+    <string name="backup_btn_create_now">Cadangkan Sekarang (.zip)</string>
+
+    <string name="backup_restore_card_title">Pulihkan Data dari Cadangan (Restore)</string>
+    <string name="backup_restore_card_desc">Memvalidasi arsip ZIP dan integritas SQLite sebelum menggantikan data aktif. Salinan keamanan otomatis disimpan sebelum pemulihan.</string>
+    <string name="backup_btn_restore_file">Pilih File Cadangan (.zip)</string>
+
+    <string name="backup_confirm_restore_title">Konfirmasi Pemulihan Data</string>
+    <string name="backup_confirm_restore_message">PERINGATAN: Seluruh data transaksi, stok produk, utang, dan foto saat ini akan DIGANTIKAN dengan isi file cadangan yang dipilih. Aplikasi akan dimulai ulang setelah selesai. Lanjutkan?</string>
+    <string name="backup_btn_confirm_restore">Ya, Pulihkan Sekarang</string>
+    <string name="backup_btn_cancel_restore">Batal</string>
+
+    <string name="backup_progress_working">Sedang memproses arsip cadangan, mohon tunggu…</string>
+    <string name="backup_msg_create_success">Cadangan berhasil disimpan: %1$s</string>
+    <string name="backup_msg_restore_success">Pemulihan berhasil! Memulai ulang aplikasi…</string>
+    <string name="backup_restart_dialog_title">Pemulihan Selesai</string>
+    <string name="backup_restart_dialog_message">Database dan foto produk telah berhasil dipulihkan. Tekan tombol di bawah untuk memulai ulang aplikasi.</string>
+    <string name="backup_btn_restart_now">Mulai Ulang Aplikasi</string>
+</resources>
